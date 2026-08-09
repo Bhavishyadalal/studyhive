@@ -5,6 +5,7 @@ import { SubjectCard } from "@/components/home/SubjectCard";
 import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight, CloudUpload } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFolders, getRecentFiles, createFolder, getTotalFileCount } from "@/lib/google-drive/drive.functions";
+import { getStudyEmoji } from "@/components/home/SubjectCard";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
 
@@ -243,7 +244,7 @@ function Index() {
                 <div key={subject.id} className="animate-fade-up" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
                   <SubjectCard 
                     name={subject.name}
-                    icon="📚"
+                    icon={getStudyEmoji(subject.name)}
                     fileCount={subject.fileCount}
                     isLocked={subject.isLocked}
                     href={`/subject/${subject.id}`}

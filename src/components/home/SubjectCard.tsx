@@ -89,7 +89,7 @@ export function SubjectCard({ name, icon, fileCount, isLocked, href }: SubjectCa
   );
 }
 
-function getStudyEmoji(name: string) {
+export function getStudyEmoji(name: string) {
   const firstLetter = (name[0] || 'A').toUpperCase();
   if ('ABCD'.includes(firstLetter)) return '📖';
   if ('EFGH'.includes(firstLetter)) return '📝';

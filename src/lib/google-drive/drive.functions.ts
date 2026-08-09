@@ -116,8 +116,12 @@ export const getRecentFiles = createServerFn({ method: "GET" })
   });
 
 export const deleteFile = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ fileId: z.string() }))
+  .inputValidator(z.object({ fileId: z.string(), password: z.string() }))
   .handler(async ({ data }) => {
+    const adminPassword = process.env["ADMIN_PASSWORD"];
+    if (data.password !== adminPassword) {
+      throw new Error("Unauthorized");
+    }
     const drive = await getDriveClient();
     await (drive as any).files.update({
       fileId: data.fileId,
@@ -256,8 +260,12 @@ export const getFolder = createServerFn({ method: "GET" })
   });
 
 export const deleteFolder = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ folderId: z.string() }))
+  .inputValidator(z.object({ folderId: z.string(), password: z.string() }))
   .handler(async ({ data }) => {
+    const adminPassword = process.env["ADMIN_PASSWORD"];
+    if (data.password !== adminPassword) {
+      throw new Error("Unauthorized");
+    }
     const drive = await getDriveClient();
     await (drive as any).files.update({
       fileId: data.folderId,
@@ -277,7 +285,34 @@ export const searchFiles = createServerFn({ method: "GET" })
       pageSize: 20,
     });
     
-    return response.data.files || [];
+    const files = response.data.files || [];
+
+    const filesWithParentName = await Promise.all(
+      files.map(async (f: any) => {
+        let subjectName = "General";
+        if (f.parents && f.parents.length > 0) {
+          try {
+            const parentResponse = await (drive as any).files.get({
+              fileId: f.parents[0],
+              fields: "name",
+            });
+            subjectName = parentResponse.data.name;
+          } catch (e) {}
+        }
+
+        return {
+          id: f.id!,
+          name: f.name!,
+          date: f.createdTime
+            ? new Date(f.createdTime).toLocaleDateString()
+            : "Unknown",
+          uploader: f.description || "Anonymous",
+          subjectName,
+        };
+      })
+    );
+
+    return filesWithParentName;
   });
 
 export const getTotalFileCount = createServerFn({ method: "GET" })

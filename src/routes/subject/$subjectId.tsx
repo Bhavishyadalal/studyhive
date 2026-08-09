@@ -19,8 +19,8 @@ function SubjectPage() {
   const queryClient = useQueryClient();
   
   const deleteMutation = useMutation({
-    mutationFn: async ({ folderId }: any) => {
-      return deleteFolder({ data: { folderId } });
+    mutationFn: async ({ folderId, password }: any) => {
+      return deleteFolder({ data: { folderId, password } });
     },
     onSuccess: () => {
       toast.success("Topic deleted successfully");
@@ -35,7 +35,7 @@ function SubjectPage() {
 
   const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    deleteMutation.mutate({ folderId: topicToDelete.id });
+    deleteMutation.mutate({ folderId: topicToDelete.id, password: adminPassword });
   };
   
   const { data: topics, isLoading, error } = useQuery({

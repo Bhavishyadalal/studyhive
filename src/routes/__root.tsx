@@ -107,6 +107,17 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var theme = localStorage.getItem('theme');
+            if (theme === 'light') {
+              document.documentElement.classList.remove('dark');
+            } else {
+              document.documentElement.classList.add('dark');
+              if (!theme) localStorage.setItem('theme', 'dark');
+            }
+          })();
+        ` }} />
         <HeadContent />
       </head>
       <body>

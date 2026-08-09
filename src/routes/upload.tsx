@@ -202,7 +202,11 @@ function UploadPage() {
                   </div>
                   
                   <div className="flex justify-between pt-4">
-                    <button onClick={() => setStep(1)} className="text-muted-foreground font-bold hover:text-primary transition-colors">← Back</button>
+                    <button onClick={() => {
+                      setStep(1);
+                      setIsCreatingNewTopic(false);
+                      setNewTopicName("");
+                    }} className="text-muted-foreground font-bold hover:text-primary transition-colors">← Back</button>
                     {(topicId || (isCreatingNewTopic && newTopicName)) && (
                       <button onClick={() => setStep(3)} className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold shadow-lg">Continue</button>
                     )}
@@ -277,7 +281,12 @@ function UploadPage() {
                   </div>
                   
                   <div className="flex justify-between pt-4">
-                    <button onClick={() => setStep(2)} className="text-muted-foreground font-bold hover:text-primary transition-colors">← Back</button>
+                    <button onClick={() => {
+                      setStep(2);
+                      setIsCreatingNewTopic(false);
+                      setNewTopicName("");
+                      setFileSizeError("");
+                    }} className="text-muted-foreground font-bold hover:text-primary transition-colors">← Back</button>
                     <button 
                       onClick={handleUpload}
                       disabled={!selectedFile || uploadMutation.isPending || !!fileSizeError}

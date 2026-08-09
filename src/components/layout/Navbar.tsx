@@ -36,8 +36,15 @@ export function Navbar() {
 
     const saved = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (saved === 'dark' || (!saved && prefersDark)) {
+    
+    if (saved === null) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
       setIsDark(true);
+    } else if (saved === 'dark') {
+      setIsDark(true);
+    } else {
+      setIsDark(false);
     }
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10);

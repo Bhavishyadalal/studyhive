@@ -46,7 +46,7 @@ function AdminPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteFile({ data: { fileId: id } }),
+    mutationFn: (id: string) => deleteFile({ data: { fileId: id, password } }),
     onSuccess: () => {
       toast.success("File trashed successfully");
       refetch();
@@ -60,7 +60,7 @@ function AdminPage() {
   });
 
   const deleteFolderMutation = useMutation({
-    mutationFn: (id: string) => deleteFolder({ data: { folderId: id } }),
+    mutationFn: (id: string) => deleteFolder({ data: { folderId: id, password } }),
     onSuccess: () => {
       toast.success("Folder deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['subjects'] });

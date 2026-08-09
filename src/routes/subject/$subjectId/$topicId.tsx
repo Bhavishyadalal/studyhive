@@ -19,8 +19,8 @@ function NotesViewPage() {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: async ({ fileId }: any) => {
-      return deleteFile({ data: { fileId } });
+    mutationFn: async ({ fileId, password }: any) => {
+      return deleteFile({ data: { fileId, password } });
     },
     onSuccess: () => {
       toast.success("File deleted successfully");
@@ -35,7 +35,7 @@ function NotesViewPage() {
 
   const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    deleteMutation.mutate({ fileId: fileToDelete.id });
+    deleteMutation.mutate({ fileId: fileToDelete.id, password: adminPassword });
   };
   
   const { data: files, isLoading, error } = useQuery({
