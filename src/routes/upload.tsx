@@ -124,24 +124,24 @@ function UploadPage() {
               </div>
               {[1, 2, 3].map((s) => (
                 <div key={s} className="relative z-10 flex flex-col items-center gap-2">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-all duration-300 ${step >= s ? "bg-secondary border-secondary text-primary scale-110 shadow-lg" : "bg-card border-muted text-muted-foreground"}`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-all duration-300 ${step >= s ? "bg-secondary border-secondary text-primary scale-110 shadow-[0_0_20px_rgba(254,208,27,0.4)]" : "bg-card border-muted text-muted-foreground"}`}>
                     {s}
                   </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider transition-colors duration-300 ${step >= s ? "text-primary" : "text-muted-foreground"}`}>
+                  <span className={`text-xs font-bold uppercase tracking-wider transition-colors duration-300 hidden sm:block ${step >= s ? "text-primary" : "text-muted-foreground"}`}>
                     {s === 1 ? "Subject" : s === 2 ? "Topic" : "File"}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="bg-card rounded-3xl shadow-2xl border-2 border-border p-8 md:p-12 min-h-[400px]">
+            <div className="bg-card rounded-3xl shadow-[0_0_80px_-20px_rgba(254,208,27,0.08)] border-2 border-border p-5 sm:p-8 md:p-6 sm:p-12 min-h-[400px]">
               {step === 1 && (
                 <div className="space-y-8 animate-slide-right">
                   <div className="text-center">
                     <h2 className="text-3xl font-bold text-primary mb-2">Select a Subject</h2>
                     <p className="text-muted-foreground">Which area of study do these notes belong to?</p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {subjects?.map((s: any) => (
                       <button
                         key={s.id}
@@ -218,7 +218,7 @@ function UploadPage() {
                   </div>
 
                   <div 
-                    className={`relative group border-4 border-dashed rounded-3xl p-12 text-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50/10' : 'border-primary/20 hover:border-secondary hover:scale-[1.01] hover:shadow-inner bg-muted/20'}`}
+                    className={`relative group border-4 border-dashed rounded-3xl p-6 sm:p-12 text-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50/10' : 'border-primary/20 hover:border-secondary hover:scale-[1.01] hover:shadow-inner bg-muted/20'}`}
                   >
                     <input 
                       type="file" 
@@ -281,7 +281,7 @@ function UploadPage() {
                     <button 
                       onClick={handleUpload}
                       disabled={!selectedFile || uploadMutation.isPending || !!fileSizeError}
-                      className="bg-primary text-primary-foreground font-bold px-12 py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 hover:shadow-yellow-400/20 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
+                      className="bg-primary text-primary-foreground font-bold px-6 sm:px-12 py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all duration-150 hover:brightness-110 hover:shadow-yellow-400/20 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
                     >
                       {uploadMutation.isPending ? <><Loader2 className="animate-spin" /> Uploading...</> : "Upload to Drive"}
                     </button>

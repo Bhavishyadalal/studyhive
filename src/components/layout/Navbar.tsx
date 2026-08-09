@@ -16,11 +16,12 @@ const THEMES = [
 ]
 
 export function Navbar() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => typeof window !== 'undefined' && (localStorage.getItem('theme') !== 'light'));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeTheme, setActiveTheme] = useState('default');
   const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
+  
   const themePanelRef = useRef<HTMLDivElement>(null);
 
   const applyTheme = (themeId: string) => {
@@ -37,7 +38,6 @@ export function Navbar() {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (saved === 'dark' || (!saved && prefersDark)) {
       setIsDark(true);
-      document.documentElement.classList.add('dark');
     }
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -56,6 +56,17 @@ export function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
   const toggleDark = () => {
     const next = !isDark;
     setIsDark(next);
@@ -69,15 +80,21 @@ export function Navbar() {
   };
 
   return (
-    <nav className={`sticky top-0 z-50 w-full transition-all duration-500 ${isScrolled ? 'bg-background/80 backdrop-blur-md shadow-md border-b' : 'bg-transparent border-b border-white/10'}`}>
+    <nav className={`sticky top-0 z-[200] w-full transition-all duration-700 ${
+      isScrolled 
+        ? 'bg-background/95 backdrop-blur-md shadow-md border-b border-white/5' 
+        : 'bg-[#040118]/60 backdrop-blur-sm border-b border-white/10'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary tracking-tight">
+        <Link to="/" className="flex items-center gap-2 text-xl font-black text-white tracking-tight">
           <span className="animate-float">🐝</span>
-          <span className={!isScrolled ? 'text-white dark:text-foreground' : ''}>StudyHive</span>
+          <span>StudyHive</span>
         </Link>
         
         <div className="hidden md:flex items-center gap-8 font-semibold">
-          <Link to="/" className={`relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full ${!isScrolled ? 'text-white/80 hover:text-white' : 'text-primary hover:text-primary/80'} transition-colors`}>Home</Link>
+          <Link to="/" className={`relative transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${
+            isScrolled ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white'
+          }`}>Home</Link>
           <Link 
             to="/" 
             search={{ scrollTo: 'subjects' }}
@@ -87,28 +104,38 @@ export function Navbar() {
                 document.getElementById("browse-subjects")?.scrollIntoView({ behavior: "smooth" });
               }
             }}
-            className={`relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full ${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}
+            className={`relative transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${
+              isScrolled ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white'
+            }`}
           >
             Subjects
           </Link>
-          <Link to="/search" className={`relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full ${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Search</Link>
-          <Link to="/upload" className={`relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full ${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Upload</Link>
-          <Link to="/admin" className={`relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-yellow-400 after:transition-all after:duration-300 hover:after:w-full ${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Admin</Link>
+          <Link to="/search" className={`relative transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${
+            isScrolled ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white'
+          }`}>Search</Link>
+          <Link to="/upload" className={`relative transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${
+            isScrolled ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white'
+          }`}>Upload</Link>
+          <Link to="/admin" className={`relative transition-all duration-200 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${
+            isScrolled ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white'
+          }`}>Admin</Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 relative z-[200]">
           <div className="relative" ref={themePanelRef}>
             <button 
               onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
-              className={`p-2 rounded-full transition-all duration-500 hover:scale-110 ${!isScrolled ? 'text-white hover:bg-white/10' : 'text-primary hover:bg-muted'}`}
+              className={`p-2 rounded-full transition-all duration-200 ${
+                isScrolled ? 'text-foreground hover:bg-muted' : 'text-white hover:bg-white/10'
+              }`}
               aria-label="Change theme"
             >
               <Palette className="w-5 h-5" />
             </button>
             
             {isThemePanelOpen && (
-              <div className="absolute right-0 mt-2 p-3 glass-card border border-white/10 shadow-2xl min-w-[200px] z-50 animate-in fade-in zoom-in duration-200">
-                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-bold mb-3 ml-1">Theme</p>
+              <div className="absolute right-0 top-12 glass-card p-4 min-w-[160px] shadow-2xl border border-border bg-card z-50 animate-in fade-in zoom-in duration-200">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mb-3 font-bold">Theme</p>
                 <div className="grid grid-cols-5 gap-2">
                   {THEMES.map((theme) => (
                     <button
@@ -117,7 +144,7 @@ export function Navbar() {
                         applyTheme(theme.id);
                         setIsThemePanelOpen(false);
                       }}
-                      className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer hover:scale-110 ${activeTheme === theme.id ? 'border-white scale-110 shadow-lg' : 'border-transparent'}`}
+                      className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer hover:scale-110 ${activeTheme === theme.id ? 'border-primary scale-110 shadow-lg' : 'border-transparent'}`}
                       style={{ backgroundColor: theme.accent }}
                       title={theme.name}
                     />
@@ -129,7 +156,9 @@ export function Navbar() {
 
           <button 
             onClick={toggleDark}
-            className={`p-2 rounded-full transition-all duration-500 hover:rotate-180 ${!isScrolled ? 'text-white hover:bg-white/10' : 'text-primary hover:bg-muted'}`}
+            className={`p-2 rounded-full transition-all duration-500 hover:rotate-180 ${
+              isScrolled ? 'text-foreground hover:bg-muted' : 'text-white hover:bg-white/10'
+            }`}
             aria-label="Toggle theme"
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -137,50 +166,106 @@ export function Navbar() {
           
           <Link 
             to="/upload"
-            className="hidden sm:block bg-secondary text-primary font-bold px-6 py-2 rounded-lg hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-yellow-400/30 animate-pulse hover:animate-none"
+            className="hidden sm:block bg-secondary text-secondary-foreground font-bold px-6 py-2 rounded-lg hover:shadow-[0_0_20px_rgba(254,208,27,0.4)] hover:scale-105 active:scale-95 transition-all duration-200"
           >
             Upload
           </Link>
 
           <button 
-            className="md:hidden p-2 text-primary" 
-            onClick={() => setIsMenuOpen(true)}
+            className={`md:hidden p-2 text-primary relative z-[200] transition-colors ${isScrolled || isMenuOpen ? 'text-foreground' : 'text-white'}`} 
+            onClick={() => { 
+              if (isMenuOpen) {
+                setIsMenuOpen(false);
+                document.body.style.overflow = '';
+              } else {
+                setIsMenuOpen(true); 
+                document.body.style.overflow = 'hidden'; 
+              }
+            }}
           >
-            <Menu className="w-6 h-6" />
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu Drawer */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl md:hidden transition-transform duration-300 animate-in slide-in-from-right">
-          <div className="flex flex-col h-full p-6">
-            <div className="flex justify-between items-center mb-12">
-              <span className="text-2xl font-bold text-primary">StudyHive</span>
-              <button onClick={() => setIsMenuOpen(false)}><X className="w-8 h-8" /></button>
+        <>
+          {/* Full screen dark overlay — blocks everything behind */}
+          <div 
+            className="fixed inset-0 z-[100] bg-[#040118]"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
+          />
+          
+          {/* Drawer content on top of overlay */}
+          <div 
+            className="fixed inset-0 z-[101] flex flex-col md:hidden"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', backgroundColor: '#040118' }}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
+              <span className="text-2xl font-bold text-white">🐝 StudyHive</span>
             </div>
-            <div className="flex flex-col gap-6 text-xl font-bold text-primary">
-              <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
+
+            {/* Nav Links */}
+            <div className="flex flex-col px-6 py-8 gap-1 flex-1">
+              <Link 
+                to="/" 
+                onClick={() => { setIsMenuOpen(false); document.body.style.overflow = ''; }}
+                className="text-xl font-bold px-4 py-4 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/5"
+              >
+                Home
+              </Link>
               <Link 
                 to="/" 
                 search={{ scrollTo: 'subjects' }}
                 onClick={(e) => {
                   setIsMenuOpen(false);
+                  document.body.style.overflow = '';
                   if (window.location.pathname === "/") {
                     e.preventDefault();
                     document.getElementById("browse-subjects")?.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
+                className="text-xl font-bold px-4 py-4 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/5"
               >
                 Subjects
               </Link>
-              <Link to="/search" onClick={() => setIsMenuOpen(false)}>Search</Link>
-              <Link to="/upload" onClick={() => setIsMenuOpen(false)}>Upload</Link>
-              <Link to="/admin" onClick={() => setIsMenuOpen(false)}>Admin</Link>
-              <Link to="/upload" onClick={() => setIsMenuOpen(false)} className="bg-secondary p-4 rounded-lg text-center mt-4">Upload Now</Link>
+              <Link 
+                to="/search" 
+                onClick={() => { setIsMenuOpen(false); document.body.style.overflow = ''; }}
+                className="text-xl font-bold px-4 py-4 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/5"
+              >
+                Search
+              </Link>
+              <Link 
+                to="/upload" 
+                onClick={() => { setIsMenuOpen(false); document.body.style.overflow = ''; }}
+                className="text-xl font-bold px-4 py-4 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/5"
+              >
+                Upload
+              </Link>
+              <Link 
+                to="/admin" 
+                onClick={() => { setIsMenuOpen(false); document.body.style.overflow = ''; }}
+                className="text-xl font-bold px-4 py-4 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/5"
+              >
+                Admin
+              </Link>
+            </div>
+
+            {/* Bottom CTA */}
+            <div className="px-6 pb-10">
+              <Link 
+                to="/upload" 
+                onClick={() => { setIsMenuOpen(false); document.body.style.overflow = ''; }}
+                className="block w-full bg-[#fed01b] text-[#040118] font-bold text-lg text-center py-4 rounded-2xl active:scale-95 transition-all duration-150 hover:brightness-110"
+              >
+                Upload Now
+              </Link>
             </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );

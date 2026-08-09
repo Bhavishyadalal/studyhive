@@ -9,7 +9,7 @@ interface SubjectCardProps {
   href: string;
 }
 
-export function SubjectCard({ name, fileCount, isLocked, href }: SubjectCardProps) {
+export function SubjectCard({ name, icon, fileCount, isLocked, href }: SubjectCardProps) {
   const colors = [
     { 
       glow: 'group-hover:shadow-blue-500/20', 
@@ -47,33 +47,54 @@ export function SubjectCard({ name, fileCount, isLocked, href }: SubjectCardProp
   return (
     <Link
       to={href}
-      className={`group relative flex flex-col justify-between h-48 p-7 glass-card transition-all duration-300 hover:-translate-y-2 border-white/10 ${color.border} ${color.glow} hover:shadow-2xl hover:shadow-yellow-500/10 overflow-hidden`}
+      title={name}
+      className="group relative flex flex-col justify-between h-52 p-7 glass-card transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.01] border-white/5 glow-border card-hover overflow-hidden"
     >
-      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${color.accent} opacity-70 group-hover:opacity-100 transition-opacity`} />
+      {/* Top accent line */}
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${color.accent} opacity-40 group-hover:opacity-100 transition-opacity`} />
       
-      <div className="flex justify-between items-start">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${color.iconBg} ${color.text} transition-colors group-hover:bg-white/10`}>
-          <BookOpen className="w-7 h-7" />
+      {/* Glow blob behind icon */}
+      <div className={`absolute top-10 left-10 w-20 h-20 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-opacity bg-gradient-to-r ${color.accent}`} />
+
+      <div className="flex justify-between items-start relative z-10">
+        <div className="flex items-center gap-4">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 ${color.text} transition-all group-hover:scale-110 duration-500`}>
+            {icon ? (
+              <span className="text-3xl">{icon}</span>
+            ) : (
+              <BookOpen className="w-7 h-7" />
+            )}
+          </div>
         </div>
         {isLocked && (
-          <div className="bg-white/5 px-2 py-1 rounded-lg" aria-label="Private folder">
-            <Lock className="w-4 h-4 text-white/40" />
+          <div className="bg-white/5 border border-white/10 p-2 rounded-xl" aria-label="Private folder">
+            <Lock className="w-4 h-4 text-white/40 animate-pulse" />
           </div>
         )}
       </div>
       
-      <div className="flex justify-between items-end mt-4">
-        <div className="max-w-[70%]">
-          <span className="block font-bold text-xl text-white leading-tight group-hover:text-[#fed01b] transition-colors">{name}</span>
-          <p className="text-[10px] font-bold text-white/30 mt-2 uppercase tracking-[0.2em]">Subject Folder</p>
-        </div>
-        <div className="flex flex-col items-end gap-3">
-            <span className="bg-[#040118] border border-white/10 px-4 py-1.5 rounded-full text-[11px] font-bold text-[#fed01b] shadow-xl group-hover:scale-110 transition-transform">
-                {fileCount} files
+      <div className="relative z-10">
+        <span className="block font-black text-2xl text-foreground tracking-tight leading-tight group-hover:text-primary transition-colors">{name}</span>
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Subject</p>
+          <div className="flex items-center gap-2">
+            <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-black text-secondary tracking-widest uppercase">
+              {fileCount} files
             </span>
-            <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-[#fed01b] group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+          </div>
         </div>
       </div>
     </Link>
   );
+}
+
+function getStudyEmoji(name: string) {
+  const firstLetter = (name[0] || 'A').toUpperCase();
+  if ('ABCD'.includes(firstLetter)) return '📖';
+  if ('EFGH'.includes(firstLetter)) return '📝';
+  if ('IJKL'.includes(firstLetter)) return '🔬';
+  if ('MNOP'.includes(firstLetter)) return '📐';
+  if ('QRST'.includes(firstLetter)) return '🌍';
+  return '💡';
 }

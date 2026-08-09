@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Navbar } from "@/components/layout/Navbar";
 import { SubjectCard } from "@/components/home/SubjectCard";
-import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight } from "lucide-react";
+import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight, CloudUpload } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFolders, getRecentFiles, createFolder, getTotalFileCount } from "@/lib/google-drive/drive.functions";
 import { toast } from "sonner";
@@ -12,12 +12,12 @@ function AnnouncementBanner() {
   const [dismissed, setDismissed] = useState(false);
   const announcement = import.meta.env['VITE_ANNOUNCEMENT'];
 
-  const [wasDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return !!sessionStorage.getItem("banner-dismissed");
-  });
+  useEffect(() => {
+    const wasDismissed = !!sessionStorage.getItem("banner-dismissed");
+    if (wasDismissed) setDismissed(true);
+  }, []);
 
-  if (!announcement || dismissed || wasDismissed) return null;
+  if (!announcement || dismissed) return null;
 
   return (
     <div className="bg-[#fed01b] text-[#040118] py-3 px-4 flex items-center justify-between gap-4 font-bold text-sm relative z-[60]">
@@ -116,86 +116,126 @@ function Index() {
       
       <div className="relative overflow-hidden bg-gradient-to-br from-[#0f0a2e] to-[#040118] py-24 text-white">
         <div className="absolute inset-0 z-0">
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-purple-600/20 blur-[120px]" />
-          <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-yellow-500/15 blur-[120px]" />
-          <div className="absolute bottom-0 right-20 h-80 w-80 rounded-full bg-blue-600/15 blur-[120px]" />
+          <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-purple-600/10 blur-[120px] animate-blob" />
+          <div className="absolute right-[-10%] top-[-10%] h-[600px] w-[600px] rounded-full bg-[#fed01b]/10 blur-[140px] animate-blob stagger-2" />
+          <div className="absolute bottom-[-20%] left-[20%] h-[400px] w-[400px] rounded-full bg-blue-600/10 blur-[100px] animate-blob stagger-4" />
         </div>
         
         <main className="relative z-10 max-w-7xl mx-auto px-4 text-center">
-          <div className="animate-fade-up">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
-              Share notes. <span className="text-[#fed01b] yellow-shadow">Learn together</span>.
+          {/* Pill badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 mb-8 animate-fade-up">
+            <div className="w-2 h-2 rounded-full bg-[#fed01b] animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+              Free forever · No sign up required
+            </span>
+          </div>
+
+          {/* Headline */}
+          <div className="animate-fade-up stagger-1">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 tracking-tighter leading-[0.9]">
+              Share notes.<br />
+              <span className="gradient-text">Learn together.</span>
             </h1>
           </div>
-          <div className="relative max-w-2xl mx-auto mb-16 animate-fade-up stagger-1">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-yellow-500/70 w-6 h-6" />
+
+          {/* Subheadline */}
+          <div className="animate-fade-up stagger-2">
+            <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/50 mb-12 font-medium leading-relaxed">
+              The student notes platform where knowledge flows freely — upload, discover, and ace your exams.
+            </p>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative max-w-2xl mx-auto mb-20 animate-fade-up stagger-3 group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 w-6 h-6 group-focus-within:text-[#fed01b] transition-colors" />
             <input 
               type="text" 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleHeroSearch}
-              placeholder="Search for subjects..." 
-              className="w-full h-[68px] pl-16 pr-6 bg-white/[0.06] border border-white/10 rounded-full shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-400/40 focus:scale-[1.01] transition-all duration-300 text-lg text-white placeholder-white/30"
+              placeholder="Search subjects, topics, notes..."
+              className="w-full h-16 pl-14 pr-6 bg-white/[0.06] border border-white/10 hover:border-white/20 focus:border-[#fed01b]/50 rounded-2xl shadow-2xl focus:outline-none focus:ring-2 focus:ring-[#fed01b]/20 transition-all duration-300 text-base text-white placeholder-white/25 backdrop-blur-sm"
             />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black text-white/40">
+              ↵ Enter
+            </div>
           </div>
-          
-          <div className="flex justify-center items-center gap-12 text-sm animate-fade-up stagger-2">
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
-              <span className="text-3xl font-bold">
-                {isNotesCountLoading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  notesShared || 0
-                )}
-              </span>
-              <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Notes Shared</span>
-            </div>
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
-              <span className="text-3xl font-bold">
-                {isLoading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  totalSubjects
-                )}
-              </span>
-              <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Subjects</span>
-            </div>
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
-              <span className="text-3xl font-bold">Free</span>
-              <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Always</span>
-            </div>
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-12 animate-fade-up stagger-4">
+            {[
+              { value: isNotesCountLoading ? null : (notesShared || 0), label: 'Notes Shared' },
+              { value: isLoading ? null : totalSubjects, label: 'Subjects' },
+              { value: 'Free', label: 'Always' },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center gap-1 group cursor-default">
+                <span className="text-4xl md:text-5xl font-black tracking-tighter group-hover:scale-110 transition-transform duration-300">
+                  {stat.value === null ? <Loader2 className="w-8 h-8 animate-spin text-white/20" /> : stat.value}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 group-hover:text-[#fed01b] transition-colors">{stat.label}</span>
+              </div>
+            ))}
           </div>
         </main>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Recently Uploaded */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold text-primary mb-6 border-l-4 border-yellow-400 pl-4 animate-fade-up">Recently Uploaded</h2>
-          <div className="flex gap-6 overflow-x-auto pb-4">
-            {recentFiles?.map((file: any, index: number) => (
-              <div key={file.id} className={`min-w-[280px] glass-card p-6 border border-white/5 shadow-xl hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-1 transition-all duration-300 group shimmer animate-fade-up`} style={{ animationDelay: `${(index + 3) * 0.1}s` }}>
+        <section className="mb-20">
+          <div className="flex flex-col mb-8 animate-fade-up">
+            <h2 className="section-heading text-primary">Recently Uploaded</h2>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2 ml-4">Latest notes</p>
+          </div>
+          
+          <div className="flex gap-6 overflow-x-auto pb-8 pt-2 scrollbar-hide">
+            {!recentFiles && (
+              <div className="flex gap-6">
+                {[1,2,3].map(i => (
+                  <div key={i} className="min-w-[260px] h-[160px] rounded-2xl bg-muted/30 shimmer-loading" />
+                ))}
+              </div>
+            )}
+            
+            {recentFiles && recentFiles.length > 0 ? recentFiles.map((file: any, index: number) => (
+              <div 
+                key={file.id} 
+                className="min-w-[260px] max-w-[260px] bg-white/[0.04] border border-white/[0.07] hover:border-[#fed01b]/30 rounded-2xl p-5 flex flex-col gap-3 card-hover glow-border cursor-default"
+                style={{ animationDelay: `${(index + 3) * 0.1}s` }}
+              >
                 <div>
                   <p className="font-bold text-lg truncate text-primary">{file.name}</p>
                   <div className="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[10px] font-bold mt-2 tracking-widest uppercase">
                     {file.subjectName}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground mt-6 flex justify-between items-center font-bold">
-                  <span className="bg-white/5 px-2 py-1 rounded">{file.uploader}</span>
+                <div className="text-[10px] text-muted-foreground mt-auto flex justify-between items-center font-black uppercase tracking-widest">
+                  <span className="bg-muted/20 px-2 py-1 rounded">{file.uploader}</span>
                   <span>{file.date}</span>
                 </div>
               </div>
-            ))}
+            )) : recentFiles?.length === 0 && (
+              <div className="w-full py-16 text-center bg-card rounded-[2rem] border-2 border-dashed border-border animate-fade-up stagger-3">
+                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CloudUpload className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-bold text-sm tracking-widest uppercase">
+                  No notes uploaded yet — be the first! 🐝
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
         {/* Subjects Grid */}
         <section id="browse-subjects">
-          <h2 className="text-2xl font-bold text-primary mb-8">Browse Subjects</h2>
+          <div className="flex flex-col mb-10 animate-fade-up">
+            <h2 className="section-heading text-primary">Browse Subjects</h2>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2 ml-4">{totalSubjects} subjects</p>
+          </div>
+          
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => <div key={i} className="h-40 bg-card rounded-lg border animate-pulse" />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[1, 2, 3, 4].map((i) => <div key={i} className="h-48 rounded-[2rem] shimmer-loading" />)}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -230,31 +270,31 @@ function Index() {
 
       {/* Create Subject Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040118]/85 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl p-8 md:p-10 animate-scale-in rounded-[28px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-md border border-border shadow-2xl p-8 md:p-10 animate-scale-in rounded-[28px]">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-primary">New Subject</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                <X className="w-8 h-8 text-white/50" />
+              <h2 className="text-2xl font-bold text-foreground">New Subject</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground">
+                <X className="w-8 h-8" />
               </button>
             </div>
             
             <form onSubmit={handleCreateSubject} className="space-y-8">
               <div>
-                <label className="block text-xs font-bold text-white/40 uppercase tracking-[0.2em] mb-3 ml-1">Subject Name</label>
+                <label className="block text-xs font-bold text-foreground/40 uppercase tracking-[0.2em] mb-3 ml-1">Subject Name</label>
                 <input 
                   autoFocus
                   type="text"
                   value={newSubjectName}
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   placeholder="e.g. Computer Science"
-                  className="w-full h-16 px-6 bg-white/[0.04] border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-2xl outline-none transition-all text-lg text-white placeholder-white/20"
+                  className="w-full h-16 px-6 bg-muted/50 border border-border focus:border-secondary focus:ring-1 focus:ring-secondary rounded-2xl outline-none transition-all text-lg text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               
               <button 
                 disabled={createSubjectMutation.isPending}
-                className="w-full h-16 bg-[#fed01b] text-[#040118] text-lg font-bold rounded-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 yellow-glow animate-glow-pulse"
+                className="w-full h-16 bg-[#fed01b] text-[#040118] text-lg font-bold rounded-2xl hover:scale-[1.02] hover:brightness-110 active:scale-95 transition-all duration-150 flex items-center justify-center gap-3 disabled:opacity-50 yellow-glow animate-glow-pulse"
               >
                 {createSubjectMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Subject"}
               </button>
@@ -262,7 +302,30 @@ function Index() {
           </div>
         </div>
       )}
-
+      
+      <ScrollToTop />
     </div>
+  );
+}
+
+function ScrollToTop() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setVisible(window.scrollY > 300);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="fixed bottom-8 left-8 w-10 h-10 bg-secondary text-primary rounded-full shadow-lg hover:scale-110 transition-all animate-fade-up z-50 flex items-center justify-center font-bold"
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
   );
 }

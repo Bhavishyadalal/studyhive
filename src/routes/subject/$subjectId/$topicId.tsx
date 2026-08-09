@@ -19,8 +19,7 @@ function NotesViewPage() {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: async ({ fileId, password }: any) => {
-      await verifyAdminPassword({ data: { password } });
+    mutationFn: async ({ fileId }: any) => {
       return deleteFile({ data: { fileId } });
     },
     onSuccess: () => {
@@ -36,8 +35,7 @@ function NotesViewPage() {
 
   const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adminPassword) return;
-    deleteMutation.mutate({ fileId: fileToDelete.id, password: adminPassword });
+    deleteMutation.mutate({ fileId: fileToDelete.id });
   };
   
   const { data: files, isLoading, error } = useQuery({
@@ -94,7 +92,7 @@ function NotesViewPage() {
       <Navbar />
       
       {/* Subject Banner */}
-      <div className="bg-[#070235] text-white py-12">
+      <div className="bg-gradient-to-br from-[#0f0a2e] to-[#040118] border-b border-white/5 text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -172,7 +170,7 @@ function NotesViewPage() {
             {sortedFiles.map((file: any, index: number) => (
               <div 
                 key={file.id} 
-                className="group bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:shadow-xl hover:-translate-y-1 hover:border-secondary/50 animate-fade-up"
+                className="group bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all hover:shadow-xl hover:-translate-y-1 hover:border-secondary/50 animate-fade-up"
                 style={{ animationDelay: `${(index + 1) * 0.1}s` }}
               >
                 <div className="flex items-center gap-5 w-full md:w-auto">
@@ -189,7 +187,7 @@ function NotesViewPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto justify-end relative">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-end relative">
                   <button 
                     onClick={() => setFileToDelete(file)}
                     className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 mr-1"
@@ -252,9 +250,9 @@ function NotesViewPage() {
 
       {/* Preview Modal */}
       {previewFile && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 md:p-8 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setPreviewFile(null)} />
-          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
+          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-none sm:rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-4 min-w-0">
                 <FileText className="w-6 h-6 text-primary shrink-0" />

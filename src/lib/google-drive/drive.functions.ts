@@ -20,52 +20,43 @@ export const getFolders = createServerFn({ method: "GET" })
 
     const folders = response.data.files || [];
 
-    const foldersWithCounts = await Promise.all(
-      folders.map(async (f: any) => {
-        let isLocked = false;
-        try {
-          if (f.description) {
-            const desc = JSON.parse(f.description);
-            isLocked = !!desc.protected;
-          }
-        } catch (e) {}
-
-        // Fix Issue 2: Count files inside topic folders for each subject
-        let fileCount = 0;
-        try {
-          // 1. Get all topic subfolders inside this subject folder
-          const subfoldersResponse = await (drive as any).files.list({
-            q: `'${f.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-            fields: "files(id)",
-          });
-          const subfolders = subfoldersResponse.data.files || [];
-
-          // 2. For each topic subfolder, count its files
-          const counts = await Promise.all(
-            subfolders.map(async (sf: any) => {
-              const res = await (drive as any).files.list({
-                q: `'${sf.id}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
-                fields: "files(id)",
-                pageSize: 1000,
-              });
-              return res.data.files?.length || 0;
-            })
-          );
-
-          // 3. Sum all topic file counts as the subject's fileCount
-          fileCount = counts.reduce((acc, c) => acc + c, 0);
-        } catch (e) {
-          console.error("Error counting files for subject:", f.id, e);
+    const foldersWithCounts: any[] = [];
+    for (const f of folders) {
+      let isLocked = false;
+      try {
+        if (f.description) {
+          const desc = JSON.parse(f.description);
+          isLocked = !!desc.protected;
         }
+      } catch (e) {}
 
-        return {
-          id: f.id,
-          name: f.name,
-          isLocked,
-          fileCount,
-        };
-      })
-    );
+      let fileCount = 0;
+      try {
+        const subfoldersResponse = await (drive as any).files.list({
+          q: `'${f.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+          fields: "files(id)",
+        });
+        const subfolders = subfoldersResponse.data.files || [];
+
+        for (const sf of subfolders) {
+          const res = await (drive as any).files.list({
+            q: `'${sf.id}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
+            fields: "files(id)",
+            pageSize: 1000,
+          });
+          fileCount += res.data.files?.length || 0;
+        }
+      } catch (e) {
+        console.error("Error counting files for subject:", f.id, e);
+      }
+
+      foldersWithCounts.push({
+        id: f.id,
+        name: f.name,
+        isLocked,
+        fileCount,
+      });
+    }
 
     return foldersWithCounts;
   });
@@ -87,12 +78,11 @@ export const getRecentFiles = createServerFn({ method: "GET" })
   .inputValidator(z.object({}))
   .handler(async () => {
     const drive = await getDriveClient();
-    const rootId = await getRootFolderId(drive);
     const response = await (drive as any).files.list({
       q: `mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
       fields: "files(id, name, createdTime, description, parents)",
       orderBy: "modifiedTime desc",
-      pageSize: 100,
+      pageSize: 20,
     });
 
     const files = response.data.files || [];
@@ -122,14 +112,7 @@ export const getRecentFiles = createServerFn({ method: "GET" })
       })
     );
 
-    // Filter out files that aren't in a subject (meaning their parent is the root)
-    const rootFolderResponse = await (drive as any).files.get({
-      fileId: rootId,
-      fields: "name",
-    });
-    const rootName = rootFolderResponse.data.name;
-
-    return filesWithParentName.filter(f => f.subjectName !== rootName);
+    return filesWithParentName;
   });
 
 export const deleteFile = createServerFn({ method: "POST" })
@@ -293,6 +276,7 @@ export const searchFiles = createServerFn({ method: "GET" })
       fields: "files(id, name, createdTime, description, parents)",
       pageSize: 20,
     });
+    
     return response.data.files || [];
   });
 
@@ -302,17 +286,14 @@ export const getTotalFileCount = createServerFn({ method: "GET" })
     const drive = await getDriveClient();
     const rootId = await getRootFolderId(drive);
 
-    // 1. Lists all subject folders under root
     const subjectsResponse = await (drive as any).files.list({
       q: `'${rootId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
       fields: "files(id)",
     });
     const subjects = subjectsResponse.data.files || [];
 
-    let totalSum = 0;
-
+    let totalFiles = 0;
     for (const subject of subjects) {
-      // 2. For each subject, lists all topic folders
       const topicsResponse = await (drive as any).files.list({
         q: `'${subject.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
         fields: "files(id)",
@@ -320,16 +301,14 @@ export const getTotalFileCount = createServerFn({ method: "GET" })
       const topics = topicsResponse.data.files || [];
 
       for (const topic of topics) {
-        // 3. For each topic, counts files
         const filesResponse = await (drive as any).files.list({
           q: `'${topic.id}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
           fields: "files(id)",
           pageSize: 1000,
         });
-        totalSum += filesResponse.data.files?.length || 0;
+        totalFiles += filesResponse.data.files?.length || 0;
       }
     }
 
-    // 4. Returns the total sum
-    return totalSum;
+    return totalFiles;
   });

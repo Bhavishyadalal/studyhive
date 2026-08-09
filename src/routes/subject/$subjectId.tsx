@@ -19,8 +19,7 @@ function SubjectPage() {
   const queryClient = useQueryClient();
   
   const deleteMutation = useMutation({
-    mutationFn: async ({ folderId, password }: any) => {
-      await verifyAdminPassword({ data: { password } });
+    mutationFn: async ({ folderId }: any) => {
       return deleteFolder({ data: { folderId } });
     },
     onSuccess: () => {
@@ -36,8 +35,7 @@ function SubjectPage() {
 
   const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adminPassword) return;
-    deleteMutation.mutate({ folderId: topicToDelete.id, password: adminPassword });
+    deleteMutation.mutate({ folderId: topicToDelete.id });
   };
   
   const { data: topics, isLoading, error } = useQuery({
@@ -63,7 +61,7 @@ function SubjectPage() {
       <Navbar />
       
       {/* Subject Header Banner */}
-      <div className="bg-[#070235] text-white py-16">
+      <div className="bg-gradient-to-br from-[#0f0a2e] to-[#040118] border-b border-white/5 text-white py-16">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-8 animate-fade-up">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -77,7 +75,7 @@ function SubjectPage() {
                 <Folder className="w-10 h-10 text-secondary" />
               </div>
               <div>
-                <h1 className="text-5xl font-bold tracking-tight capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</h1>
+                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</h1>
                 <p className="text-slate-400 mt-2 uppercase tracking-widest text-sm font-bold">Subject Topics</p>
               </div>
             </div>
@@ -124,7 +122,7 @@ function SubjectPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {filteredTopics?.map((topic: any, index: number) => (
-              <div key={topic.id} className="relative h-32 animate-fade-up" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
+              <div key={topic.id} className="relative min-h-[100px] h-auto py-4 sm:h-32 animate-fade-up" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
                 {topic.isLocked ? (
                   <div className="h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between opacity-70 cursor-not-allowed">
                     <div className="flex items-center gap-4">

@@ -23,7 +23,11 @@ export async function getDriveClient() {
   return google.drive({ version: "v3", auth: oauth2Client as any });
 }
 
+let cachedRootFolderId: string | null = null;
+
 export async function getRootFolderId(drive: any) {
+  if (cachedRootFolderId) return cachedRootFolderId;
+
   const response = await drive.files.list({
     q: "name = 'StudyHive' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
     fields: "files(id)",
@@ -31,7 +35,8 @@ export async function getRootFolderId(drive: any) {
   });
 
   if (response.data.files && response.data.files.length > 0) {
-    return response.data.files[0].id;
+    cachedRootFolderId = response.data.files[0].id;
+    return cachedRootFolderId;
   }
 
   const folder = await drive.files.create({
