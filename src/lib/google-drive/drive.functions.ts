@@ -51,7 +51,10 @@ export const getFolders = createServerFn({ method: "GET" })
 export const verifyAdminPassword = createServerFn({ method: "POST" })
   .inputValidator(z.object({ password: z.string() }))
   .handler(async ({ data }) => {
-    const adminPassword = process.env["ADMIN_PASSWORD"] || "studyhive2026";
+    const adminPassword = process.env["ADMIN_PASSWORD"];
+    if (!adminPassword) {
+      throw new Error("ADMIN_PASSWORD environment variable is not configured.");
+    }
     if (data.password === adminPassword) {
       return { success: true };
     }
@@ -62,11 +65,12 @@ export const getRecentFiles = createServerFn({ method: "GET" })
   .inputValidator(z.object({}))
   .handler(async () => {
     const drive = await getDriveClient();
+    const rootId = await getRootFolderId(drive);
     const response = await (drive as any).files.list({
       q: `mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
       fields: "files(id, name, createdTime, description, parents)",
       orderBy: "modifiedTime desc",
-      pageSize: 6,
+      pageSize: 100,
     });
 
     const files = response.data.files || [];
@@ -96,7 +100,14 @@ export const getRecentFiles = createServerFn({ method: "GET" })
       })
     );
 
-    return filesWithParentName;
+    // Filter out files that aren't in a subject (meaning their parent is the root)
+    const rootFolderResponse = await (drive as any).files.get({
+      fileId: rootId,
+      fields: "name",
+    });
+    const rootName = rootFolderResponse.data.name;
+
+    return filesWithParentName.filter(f => f.subjectName !== rootName);
   });
 
 export const deleteFile = createServerFn({ method: "POST" })
@@ -226,4 +237,39 @@ export const uploadFile = createServerFn({ method: "POST" })
     });
 
     return { id: response.data.id };
+  });
+
+export const getFolder = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ folderId: z.string() }))
+  .handler(async ({ data }) => {
+    const drive = await getDriveClient();
+    const response = await (drive as any).files.get({
+      fileId: data.folderId,
+      fields: "id, name, description",
+    });
+    return response.data;
+  });
+
+export const deleteFolder = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ folderId: z.string() }))
+  .handler(async ({ data }) => {
+    const drive = await getDriveClient();
+    await (drive as any).files.update({
+      fileId: data.folderId,
+      requestBody: { trashed: true },
+    });
+    return { success: true };
+  });
+
+export const searchFiles = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ query: z.string() }))
+  .handler(async ({ data }) => {
+    const drive = await getDriveClient();
+    const safeQuery = data.query.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const response = await (drive as any).files.list({
+      q: `name contains '${safeQuery}' and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: "files(id, name, createdTime, description, parents)",
+      pageSize: 20,
+    });
+    return response.data.files || [];
   });

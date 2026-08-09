@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useLocation, Link } from "@tanstack/react-rout
 import { Navbar } from "@/components/layout/Navbar";
 import { ChevronRight, Loader2, AlertCircle, Lock, Folder, CloudUpload, Search, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFolders } from "@/lib/google-drive/drive.functions";
+import { getFolders, getFolder } from "@/lib/google-drive/drive.functions";
 import { useState } from "react";
 
 export const Route = createFileRoute("/subject/$subjectId")({
@@ -17,6 +17,11 @@ function SubjectPage() {
   const { data: topics, isLoading, error } = useQuery({
     queryKey: ['topics', subjectId],
     queryFn: () => getFolders({ data: { parentId: subjectId } }),
+  });
+  
+  const { data: subjectDetails } = useQuery({
+    queryKey: ['subjectDetails', subjectId],
+    queryFn: () => getFolder({ data: { folderId: subjectId } }),
   });
 
   const filteredTopics = topics?.filter((t: any) => 
@@ -37,7 +42,7 @@ function SubjectPage() {
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-8">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-white font-medium capitalize">{subjectId.split('-').join(' ')}</span>
+            <span className="text-white font-medium capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</span>
           </nav>
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -46,7 +51,7 @@ function SubjectPage() {
                 <Folder className="w-10 h-10 text-secondary" />
               </div>
               <div>
-                <h1 className="text-5xl font-bold tracking-tight capitalize">{subjectId.split('-').join(' ')}</h1>
+                <h1 className="text-5xl font-bold tracking-tight capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</h1>
                 <p className="text-slate-400 mt-2 uppercase tracking-widest text-sm font-bold">Subject Topics</p>
               </div>
             </div>
@@ -93,35 +98,52 @@ function SubjectPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {filteredTopics?.map((topic: any) => (
-              <Link
-                key={topic.id}
-                to={`/subject/${subjectId}/${topic.id}`}
-                className="group relative h-32 bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                    <Folder className="w-6 h-6 text-primary/60 group-hover:text-primary" />
-                  </div>
-                  <div>
-                    <span className="block font-bold text-xl text-primary leading-tight">{topic.name}</span>
-                    {topic.isLocked && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                        <Lock className="w-3 h-3" />
-                        <span>Private</span>
+              <div key={topic.id} className="relative h-32">
+                {topic.isLocked ? (
+                  <div className="h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between opacity-70 cursor-not-allowed">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                        <Folder className="w-6 h-6 text-primary/40" />
                       </div>
-                    )}
-                    <div className="mt-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-primary text-[10px] font-bold">
-                        {topic.fileCount} {topic.fileCount === 1 ? 'file' : 'files'}
-                      </span>
+                      <div>
+                        <span className="block font-bold text-xl text-primary/60 leading-tight">{topic.name}</span>
+                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                          <Lock className="w-3 h-3" />
+                          <span>Private / Locked</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">Contact admin to access</p>
+                      </div>
+                    </div>
+                    <div className="bg-muted p-2 rounded-lg text-muted-foreground">
+                      <Lock className="w-5 h-5" />
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <Link
+                    to="/subject/$subjectId/$topicId"
+                    params={{ subjectId, topicId: topic.id }}
+                    className="group h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                        <Folder className="w-6 h-6 text-primary/60 group-hover:text-primary" />
+                      </div>
+                      <div>
+                        <span className="block font-bold text-xl text-primary leading-tight">{topic.name}</span>
+                        <div className="mt-2">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-primary text-[10px] font-bold">
+                            {topic.fileCount} {topic.fileCount === 1 ? 'file' : 'files'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="bg-muted p-2 rounded-lg group-hover:bg-secondary group-hover:text-primary transition-all">
-                  <ArrowRight className="w-5 h-5" />
-                </div>
-              </Link>
+                    <div className="bg-muted p-2 rounded-lg group-hover:bg-secondary group-hover:text-primary transition-all">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
+                  </Link>
+                )}
+              </div>
             ))}
             
             {filteredTopics?.length === 0 && (

@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/Navbar";
 import { Shield, Trash2, Clock, FileText, BarChart3, Users, BookOpen, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { getFolders, getRecentFiles, deleteFile, verifyAdminPassword } from "@/lib/google-drive/drive.functions";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFolders, getRecentFiles, deleteFile, deleteFolder, verifyAdminPassword } from "@/lib/google-drive/drive.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -14,6 +14,9 @@ function AdminPage() {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"files" | "subjects" | "topics">("files");
+  const [selectedSubjectForTopics, setSelectedSubjectForTopics] = useState("");
+  const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
     mutationFn: (pass: string) => verifyAdminPassword({ data: { password: pass } }),
@@ -29,7 +32,6 @@ function AdminPage() {
     e.preventDefault();
     loginMutation.mutate(password);
   };
-
 
   const { data: subjects, isLoading: isLoadingSubjects } = useQuery({
     queryKey: ['subjects'],
@@ -49,6 +51,22 @@ function AdminPage() {
       toast.success("File trashed successfully");
       refetch();
     }
+  });
+
+  const { data: topics, isLoading: isLoadingTopics } = useQuery({
+    queryKey: ['adminTopics', selectedSubjectForTopics],
+    queryFn: () => getFolders({ data: { parentId: selectedSubjectForTopics } }),
+    enabled: isAuthenticated && !!selectedSubjectForTopics,
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: (id: string) => deleteFolder({ data: { folderId: id } }),
+    onSuccess: () => {
+      toast.success("Folder deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['adminTopics'] });
+    },
+    onError: () => toast.error("Failed to delete folder"),
   });
 
   if (!isAuthenticated) {
@@ -74,7 +92,6 @@ function AdminPage() {
             >
               {loginMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Unlock Access"}
             </button>
-
           </form>
           <button onClick={() => navigate({ to: '/' })} className="text-slate-500 hover:text-white transition-colors">Back to Home</button>
         </div>
@@ -131,54 +148,163 @@ function AdminPage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-card rounded-3xl border-2 border-border shadow-xl overflow-hidden">
-          <div className="p-8 border-b bg-muted/30">
-            <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
-              <Clock className="w-6 h-6" />
-              Recent Activity
-            </h2>
+        {/* Tab bar */}
+        <div className="flex border-b border-border mb-8 overflow-x-auto">
+          {(["files", "subjects", "topics"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 font-bold capitalize text-sm tracking-wide transition-all border-b-2 -mb-px shrink-0 ${
+                activeTab === tab
+                  ? "border-secondary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-primary"
+              }`}
+            >
+              {tab === "files" ? "Recent Files" : tab === "subjects" ? "Subjects" : "Topics"}
+            </button>
+          ))}
+        </div>
+
+        {/* Files Tab */}
+        {activeTab === "files" && (
+          <div className="bg-card rounded-3xl border-2 border-border shadow-xl overflow-hidden">
+            <div className="p-8 border-b bg-muted/30">
+              <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
+                <Clock className="w-6 h-6" />
+                Recent Activity
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50 text-left border-b">
+                  <tr>
+                    <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">File Name</th>
+                    <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">Uploader</th>
+                    <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">Date</th>
+                    <th className="px-8 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {isLoadingFiles ? (
+                    <tr><td colSpan={4} className="px-8 py-12 text-center text-muted-foreground">Loading activity...</td></tr>
+                  ) : recentFiles?.map((file: any) => (
+                    <tr key={file.id} className="hover:bg-muted/20 transition-colors group">
+                      <td className="px-8 py-6 font-bold text-primary">{file.name}</td>
+                      <td className="px-8 py-6 text-muted-foreground">{file.uploader}</td>
+                      <td className="px-8 py-6 text-muted-foreground">{file.date}</td>
+                      <td className="px-8 py-6 text-right">
+                        <button 
+                          onClick={() => {
+                            if (confirm("Are you sure you want to trash this file?")) {
+                              deleteMutation.mutate(file.id);
+                            }
+                          }}
+                          className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                          title="Delete File"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {recentFiles?.length === 0 && (
+                    <tr><td colSpan={4} className="px-8 py-12 text-center text-muted-foreground">No recent activity found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/50 text-left border-b">
-                <tr>
-                  <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">File Name</th>
-                  <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">Uploader</th>
-                  <th className="px-8 py-4 text-xs font-bold text-primary uppercase tracking-widest">Date</th>
-                  <th className="px-8 py-4"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoadingFiles ? (
-                  <tr><td colSpan={4} className="px-8 py-12 text-center text-muted-foreground">Loading activity...</td></tr>
-                ) : recentFiles?.map((file: any) => (
-                  <tr key={file.id} className="hover:bg-muted/20 transition-colors group">
-                    <td className="px-8 py-6 font-bold text-primary">{file.name}</td>
-                    <td className="px-8 py-6 text-muted-foreground">{file.uploader}</td>
-                    <td className="px-8 py-6 text-muted-foreground">{file.date}</td>
-                    <td className="px-8 py-6 text-right">
+        )}
+
+        {/* Subjects Tab */}
+        {activeTab === "subjects" && (
+          <div className="space-y-6">
+            <div className="bg-card p-8 rounded-3xl border-2 border-border">
+              <h2 className="text-2xl font-bold text-primary mb-2">All Subjects</h2>
+              <p className="text-muted-foreground text-sm">Deleting a subject moves it to Google Drive trash. It can be restored from there.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {isLoadingSubjects ? (
+                <div className="col-span-full py-12 text-center text-muted-foreground">Loading subjects...</div>
+              ) : subjects?.map((subject: any) => (
+                <div key={subject.id} className="bg-card p-6 rounded-2xl border-2 border-border flex items-center justify-between group hover:shadow-lg transition-all">
+                  <div>
+                    <h3 className="font-bold text-primary text-lg">{subject.name}</h3>
+                    <p className="text-sm text-muted-foreground">{subject.fileCount} files</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (confirm(`Delete subject "${subject.name}"? This will trash the folder and all its contents.`)) {
+                        deleteFolderMutation.mutate(subject.id);
+                      }
+                    }}
+                    className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                    title="Delete Subject"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+              {subjects?.length === 0 && (
+                <div className="col-span-full py-12 text-center text-muted-foreground">No subjects found.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Topics Tab */}
+        {activeTab === "topics" && (
+          <div className="space-y-6">
+            <div className="bg-card p-8 rounded-3xl border-2 border-border space-y-4">
+              <label className="block text-sm font-bold text-primary uppercase tracking-widest">Select a Subject</label>
+              <select 
+                value={selectedSubjectForTopics}
+                onChange={(e) => setSelectedSubjectForTopics(e.target.value)}
+                className="w-full md:w-96 h-12 px-4 bg-background border-2 border-border rounded-xl text-primary font-bold focus:ring-2 focus:ring-secondary outline-none transition-all"
+              >
+                <option value="">— Choose a subject —</option>
+                {subjects?.map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedSubjectForTopics && (
+              <div className="space-y-6">
+                <div className="bg-card p-8 rounded-3xl border-2 border-border">
+                  <h2 className="text-2xl font-bold text-primary mb-2">Topics</h2>
+                  <p className="text-muted-foreground text-sm">Deleting a topic moves it and its files to Google Drive trash.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {isLoadingTopics ? (
+                    <div className="col-span-full py-12 text-center text-muted-foreground">Loading topics...</div>
+                  ) : topics?.map((topic: any) => (
+                    <div key={topic.id} className="bg-card p-6 rounded-2xl border-2 border-border flex items-center justify-between group hover:shadow-lg transition-all">
+                      <div>
+                        <h3 className="font-bold text-primary text-lg">{topic.name}</h3>
+                        <p className="text-sm text-muted-foreground">{topic.fileCount} files</p>
+                      </div>
                       <button 
                         onClick={() => {
-                          if (confirm("Are you sure you want to trash this file?")) {
-                            deleteMutation.mutate(file.id);
+                          if (confirm(`Delete topic "${topic.name}"? This will trash the folder and all its files.`)) {
+                            deleteFolderMutation.mutate(topic.id);
                           }
                         }}
                         className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
-                        title="Delete File"
+                        title="Delete Topic"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-                {recentFiles?.length === 0 && (
-                  <tr><td colSpan={4} className="px-8 py-12 text-center text-muted-foreground">No recent activity found.</td></tr>
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  ))}
+                  {topics?.length === 0 && (
+                    <div className="col-span-full py-12 text-center text-muted-foreground">No topics in this subject.</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

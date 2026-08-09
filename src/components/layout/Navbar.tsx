@@ -42,7 +42,20 @@ export function Navbar() {
         
         <div className="hidden md:flex items-center gap-8 font-semibold">
           <Link to="/" className={`${!isScrolled ? 'text-white/80 hover:text-white' : 'text-primary hover:text-primary/80'} transition-colors`}>Home</Link>
-          <Link to="/" className={`${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Subjects</Link>
+          <Link 
+            to="/" 
+            search={{ scrollTo: 'subjects' }}
+            onClick={(e) => {
+              if (window.location.pathname === "/") {
+                e.preventDefault();
+                document.getElementById("browse-subjects")?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}
+          >
+            Subjects
+          </Link>
+          <Link to="/search" className={`${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Search</Link>
           <Link to="/upload" className={`${!isScrolled ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-primary'} transition-colors`}>Upload</Link>
         </div>
 
@@ -81,7 +94,20 @@ export function Navbar() {
             </div>
             <div className="flex flex-col gap-6 text-xl font-bold text-primary">
               <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-              <Link to="/" onClick={() => setIsMenuOpen(false)}>Subjects</Link>
+              <Link 
+                to="/" 
+                search={{ scrollTo: 'subjects' }}
+                onClick={(e) => {
+                  setIsMenuOpen(false);
+                  if (window.location.pathname === "/") {
+                    e.preventDefault();
+                    document.getElementById("browse-subjects")?.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                Subjects
+              </Link>
+              <Link to="/search" onClick={() => setIsMenuOpen(false)}>Search</Link>
               <Link to="/upload" onClick={() => setIsMenuOpen(false)}>Upload</Link>
               <Link to="/upload" onClick={() => setIsMenuOpen(false)} className="bg-secondary p-4 rounded-lg text-center mt-4">Upload Now</Link>
             </div>

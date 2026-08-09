@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as SubjectSubjectIdRouteImport } from './routes/subject/$subjectId'
 import { Route as SubjectSubjectIdTopicIdRouteImport } from './routes/subject/$subjectId/$topicId'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UploadRoute = UploadRouteImport.update({
@@ -44,6 +50,7 @@ const SubjectSubjectIdTopicIdRoute = SubjectSubjectIdTopicIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
   '/subject/$subjectId/$topicId': typeof SubjectSubjectIdTopicIdRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
   '/subject/$subjectId/$topicId': typeof SubjectSubjectIdTopicIdRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
   '/subject/$subjectId/$topicId': typeof SubjectSubjectIdTopicIdRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/search'
     | '/upload'
     | '/subject/$subjectId'
     | '/subject/$subjectId/$topicId'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/search'
     | '/upload'
     | '/subject/$subjectId'
     | '/subject/$subjectId/$topicId'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/search'
     | '/upload'
     | '/subject/$subjectId'
     | '/subject/$subjectId/$topicId'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  SearchRoute: typeof SearchRoute
   UploadRoute: typeof UploadRoute
   SubjectSubjectIdRoute: typeof SubjectSubjectIdRouteWithChildren
 }
@@ -108,6 +121,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upload': {
@@ -148,6 +168,7 @@ const SubjectSubjectIdRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  SearchRoute: SearchRoute,
   UploadRoute: UploadRoute,
   SubjectSubjectIdRoute: SubjectSubjectIdRouteWithChildren,
 }

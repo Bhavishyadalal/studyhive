@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { z } from "zod";
 import { Navbar } from "@/components/layout/Navbar";
 import { Upload as UploadIcon, Check, AlertCircle, BookOpen, FolderPlus, FileText, ChevronRight, CloudUpload, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useState, useMemo } from "react";
 import { uploadFile, getFolders, createFolder } from "@/lib/google-drive/drive.functions";
@@ -27,6 +28,7 @@ function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploaderName, setUploaderName] = useState("");
   const [success, setSuccess] = useState(false);
+  const [fileSizeError, setFileSizeError] = useState("");
 
   // Queries
   const { data: subjects } = useQuery({
@@ -43,6 +45,9 @@ function UploadPage() {
   // Mutations
   const createFolderMutation = useMutation({
     mutationFn: createFolder,
+    onError: (err: any) => {
+      toast.error(`Failed to create topic: ${err.message || "Please try again."}`);
+    }
   });
 
   const uploadMutation = useMutation({
@@ -217,7 +222,18 @@ function UploadPage() {
                   >
                     <input 
                       type="file" 
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (file && file.size > 45 * 1024 * 1024) {
+                          setFileSizeError("File too large. Maximum size is 45MB.");
+                          setSelectedFile(null);
+                          e.target.value = "";
+                          return;
+                        }
+                        setFileSizeError("");
+                        setSelectedFile(file);
+                      }}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <div className="space-y-4">
@@ -240,6 +256,12 @@ function UploadPage() {
                       )}
                     </div>
                   </div>
+                  {fileSizeError && (
+                    <div className="flex items-center gap-2 text-destructive font-bold text-sm bg-destructive/10 p-4 rounded-xl border border-destructive/20 animate-in fade-in slide-in-from-top-2">
+                      <AlertCircle className="w-5 h-5" />
+                      {fileSizeError}
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <label className="block">
@@ -258,7 +280,7 @@ function UploadPage() {
                     <button onClick={() => setStep(2)} className="text-muted-foreground font-bold hover:text-primary transition-colors">← Back</button>
                     <button 
                       onClick={handleUpload}
-                      disabled={!selectedFile || uploadMutation.isPending}
+                      disabled={!selectedFile || uploadMutation.isPending || !!fileSizeError}
                       className="bg-primary text-primary-foreground font-bold px-12 py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
                     >
                       {uploadMutation.isPending ? <><Loader2 className="animate-spin" /> Uploading...</> : "Upload to Drive"}

@@ -34,6 +34,22 @@
   --shadow-card: 0px 4px 12px rgba(30,27,75,0.05);
   --shadow-hover: 0px 8px 24px rgba(30,27,75,0.08);
 
+  --animate-blob: blob 7s infinite;
+  --animate-gradient: gradient 15s ease infinite;
+
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
@@ -91,6 +107,23 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+  }
+  .yellow-shadow {
+    text-shadow: 0 0 40px rgba(254, 208, 27, 0.5);
+  }
+  .yellow-glow {
+    box-shadow: 0 0 20px rgba(254, 208, 27, 0.3);
   }
 }
 

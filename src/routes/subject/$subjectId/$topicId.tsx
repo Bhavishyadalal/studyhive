@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/Navbar";
 import { ChevronRight, FileText, Download, Eye, AlertCircle, Share2, Copy, X, ExternalLink, CloudUpload, FileImage, File } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFiles } from "@/lib/google-drive/drive.functions";
-import { useState } from "react";
+import { getFiles, getFolder } from "@/lib/google-drive/drive.functions";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/subject/$subjectId/$topicId")({
@@ -13,10 +13,36 @@ export const Route = createFileRoute("/subject/$subjectId/$topicId")({
 function NotesViewPage() {
   const { subjectId, topicId } = Route.useParams();
   const [previewFile, setPreviewFile] = useState<any>(null);
-
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "nameAZ" | "nameZA" | "largest" | "smallest">("newest");
+  
   const { data: files, isLoading, error } = useQuery({
     queryKey: ['files', topicId],
     queryFn: () => getFiles({ data: { folderId: topicId } }),
+  });
+
+  const sortedFiles = useMemo(() => {
+    if (!files) return [];
+    return [...files].sort((a: any, b: any) => {
+      switch (sortBy) {
+        case "newest": return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case "oldest": return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case "nameAZ": return a.name.localeCompare(b.name);
+        case "nameZA": return b.name.localeCompare(a.name);
+        case "largest": return parseFloat(b.size) - parseFloat(a.size);
+        case "smallest": return parseFloat(a.size) - parseFloat(b.size);
+        default: return 0;
+      }
+    });
+  }, [files, sortBy]);
+
+  const { data: topicDetails } = useQuery({
+    queryKey: ['topicDetails', topicId],
+    queryFn: () => getFolder({ data: { folderId: topicId } }),
+  });
+
+  const { data: subjectDetails } = useQuery({
+    queryKey: ['subjectDetails', subjectId],
+    queryFn: () => getFolder({ data: { folderId: subjectId } }),
   });
 
   const getFileIcon = (name: string) => {
@@ -48,9 +74,9 @@ function NotesViewPage() {
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="w-4 h-4" />
-            <Link to={`/subject/${subjectId}`} className="hover:text-white transition-colors capitalize">{subjectId.split('-').join(' ')}</Link>
+            <Link to="/subject/$subjectId" params={{ subjectId }} className="hover:text-white transition-colors capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-white font-medium">Notes</span>
+            <span className="text-white font-medium">{topicDetails?.name || "Notes"}</span>
           </nav>
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -59,7 +85,7 @@ function NotesViewPage() {
                 <FileText className="w-8 h-8 text-secondary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">Notes List</h1>
+                <h1 className="text-4xl font-bold tracking-tight">{topicDetails?.name || "Notes List"}</h1>
                 <p className="text-slate-400 mt-1 uppercase tracking-widest text-xs font-bold">Topic Materials</p>
               </div>
             </div>
@@ -80,9 +106,27 @@ function NotesViewPage() {
         {/* Summary Bar */}
         {!isLoading && !error && files && files.length > 0 && (
           <div className="flex items-center gap-6 mb-8 text-sm font-bold text-muted-foreground uppercase tracking-widest bg-card p-4 rounded-xl border-2">
-            <span>{files.length} Files</span>
+            <span>{sortedFiles.length} Files</span>
             <div className="w-1.5 h-1.5 rounded-full bg-muted" />
             <span>{totalSize.toFixed(2)} MB Total</span>
+          </div>
+        )}
+
+        {!isLoading && !error && files && files.length > 1 && (
+          <div className="flex items-center justify-end mb-6 gap-3">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sort:</span>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="h-10 px-4 bg-card border-2 border-border rounded-xl text-sm font-bold text-primary focus:ring-2 focus:ring-secondary outline-none transition-all cursor-pointer"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="nameAZ">Name A → Z</option>
+              <option value="nameZA">Name Z → A</option>
+              <option value="largest">Largest First</option>
+              <option value="smallest">Smallest First</option>
+            </select>
           </div>
         )}
 
@@ -100,7 +144,7 @@ function NotesViewPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {files?.map((file: any) => (
+            {sortedFiles.map((file: any) => (
               <div 
                 key={file.id} 
                 className="group bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:shadow-xl hover:-translate-y-1 hover:border-secondary/50"
@@ -151,7 +195,7 @@ function NotesViewPage() {
               </div>
             ))}
             
-            {files?.length === 0 && (
+            {sortedFiles.length === 0 && (
               <div className="py-24 text-center bg-card border-2 border-dashed rounded-3xl">
                 <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CloudUpload className="w-10 h-10 text-muted-foreground" />
