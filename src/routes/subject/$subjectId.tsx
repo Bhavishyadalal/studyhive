@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, useLocation, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/Navbar";
-import { ChevronRight, Loader2, AlertCircle, Lock, Folder, CloudUpload, Search, ArrowRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getFolders, getFolder } from "@/lib/google-drive/drive.functions";
+import { ChevronRight, Loader2, AlertCircle, Lock, Folder, CloudUpload, Search, ArrowRight, Trash2, Key, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFolders, getFolder, verifyAdminPassword, deleteFolder } from "@/lib/google-drive/drive.functions";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/subject/$subjectId")({
   component: SubjectPage,
@@ -13,6 +14,31 @@ function SubjectPage() {
   const { subjectId } = Route.useParams();
   const location = useLocation();
   const [search, setSearch] = useState("");
+  const [topicToDelete, setTopicToDelete] = useState<any>(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const queryClient = useQueryClient();
+  
+  const deleteMutation = useMutation({
+    mutationFn: async ({ folderId, password }: any) => {
+      await verifyAdminPassword({ data: { password } });
+      return deleteFolder({ data: { folderId } });
+    },
+    onSuccess: () => {
+      toast.success("Topic deleted successfully");
+      setTopicToDelete(null);
+      setAdminPassword("");
+      queryClient.invalidateQueries({ queryKey: ['topics', subjectId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete topic");
+    }
+  });
+
+  const handleDelete = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminPassword) return;
+    deleteMutation.mutate({ folderId: topicToDelete.id, password: adminPassword });
+  };
   
   const { data: topics, isLoading, error } = useQuery({
     queryKey: ['topics', subjectId],
@@ -119,29 +145,43 @@ function SubjectPage() {
                     </div>
                   </div>
                 ) : (
-                  <Link
-                    to="/subject/$subjectId/$topicId"
-                    params={{ subjectId, topicId: topic.id }}
-                    className="group h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary hover:shadow-yellow-500/10"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                        <Folder className="w-6 h-6 text-primary/60 group-hover:text-primary" />
-                      </div>
-                      <div>
-                        <span className="block font-bold text-xl text-primary leading-tight">{topic.name}</span>
-                        <div className="mt-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-primary text-[10px] font-bold">
-                            {topic.fileCount} {topic.fileCount === 1 ? 'file' : 'files'}
-                          </span>
+                  <div className="group relative h-full">
+                    <Link
+                      to="/subject/$subjectId/$topicId"
+                      params={{ subjectId, topicId: topic.id }}
+                      className="h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary hover:shadow-yellow-500/10"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                          <Folder className="w-6 h-6 text-primary/60 group-hover:text-primary" />
+                        </div>
+                        <div>
+                          <span className="block font-bold text-xl text-primary leading-tight">{topic.name}</span>
+                          <div className="mt-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary text-primary text-[10px] font-bold">
+                              {topic.fileCount} {topic.fileCount === 1 ? 'file' : 'files'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-muted p-2 rounded-lg group-hover:bg-secondary group-hover:text-primary transition-all">
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </div>
-                  </Link>
+                      <div className="bg-muted p-2 rounded-lg group-hover:bg-secondary group-hover:text-primary transition-all">
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      </div>
+                    </Link>
+
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setTopicToDelete(topic);
+                      }}
+                      className="absolute top-2 right-2 p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100 z-10"
+                      title="Delete Topic"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
@@ -178,6 +218,62 @@ function SubjectPage() {
       >
         <CloudUpload className="w-8 h-8" />
       </Link>
+
+      {/* Admin Delete Modal */}
+      {topicToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#040118]/85 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl p-8 md:p-10 animate-scale-in rounded-[28px]">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-destructive/20 rounded-2xl flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-destructive" />
+                </div>
+                <h2 className="text-2xl font-bold text-primary">Delete Topic?</h2>
+              </div>
+              <button onClick={() => setTopicToDelete(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X className="w-8 h-8 text-white/50" />
+              </button>
+            </div>
+            
+            <p className="text-muted-foreground mb-8">
+              Are you sure you want to delete <span className="text-primary font-bold">"{topicToDelete.name}"</span>? This action cannot be undone.
+            </p>
+            
+            <form onSubmit={handleDelete} className="space-y-6">
+              <div>
+                <label className="block text-xs font-bold text-white/40 uppercase tracking-[0.2em] mb-3 ml-1">Admin Password</label>
+                <div className="relative">
+                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                  <input 
+                    autoFocus
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full h-14 pl-12 pr-6 bg-white/[0.04] border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-2xl outline-none transition-all text-white placeholder-white/20"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  disabled={deleteMutation.isPending}
+                  className="w-full h-14 bg-destructive text-white font-bold rounded-2xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {deleteMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Delete"}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setTopicToDelete(null)}
+                  className="w-full h-14 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

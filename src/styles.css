@@ -121,9 +121,9 @@
 }
 
 .dark {
-  --background: oklch(0.2 0.01 260); /* #0f0f1a approx */
+  --background: oklch(0.2 0.01 260);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.25 0.02 265); /* #1a1a2e approx */
+  --card: oklch(0.25 0.02 265);
   --card-foreground: oklch(0.98 0 0);
   --popover: oklch(0.25 0.02 265);
   --popover-foreground: oklch(0.98 0 0);
@@ -137,11 +137,56 @@
   --accent-foreground: oklch(0.129 0.042 264.695);
   --destructive: oklch(0.5 0.2 30);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.3 0.02 260); /* #2a2a3e approx */
+  --border: oklch(0.3 0.02 260);
   --input: oklch(0.3 0.02 260);
   --ring: oklch(0.98 0 0);
 }
 
+[data-theme="ocean"] {
+  --secondary: oklch(0.7 0.15 220);
+  --accent: oklch(0.7 0.15 220);
+  --accent-foreground: oklch(0.1 0.02 220);
+}
+[data-theme="forest"] {
+  --secondary: oklch(0.75 0.18 145);
+  --accent: oklch(0.75 0.18 145);
+  --accent-foreground: oklch(0.1 0.05 145);
+}
+[data-theme="rose"] {
+  --secondary: oklch(0.65 0.22 10);
+  --accent: oklch(0.65 0.22 10);
+  --accent-foreground: oklch(0.98 0 0);
+}
+[data-theme="violet"] {
+  --secondary: oklch(0.65 0.2 290);
+  --accent: oklch(0.65 0.2 290);
+  --accent-foreground: oklch(0.98 0 0);
+}
+[data-theme="sunset"] {
+  --secondary: oklch(0.7 0.18 50);
+  --accent: oklch(0.7 0.18 50);
+  --accent-foreground: oklch(0.1 0.02 50);
+}
+[data-theme="cyan"] {
+  --secondary: oklch(0.78 0.15 200);
+  --accent: oklch(0.78 0.15 200);
+  --accent-foreground: oklch(0.1 0.02 200);
+}
+[data-theme="pink"] {
+  --secondary: oklch(0.68 0.22 340);
+  --accent: oklch(0.68 0.22 340);
+  --accent-foreground: oklch(0.98 0 0);
+}
+[data-theme="lime"] {
+  --secondary: oklch(0.82 0.2 120);
+  --accent: oklch(0.82 0.2 120);
+  --accent-foreground: oklch(0.1 0.05 120);
+}
+[data-theme="gold"] {
+  --secondary: oklch(0.78 0.16 80);
+  --accent: oklch(0.78 0.16 80);
+  --accent-foreground: oklch(0.1 0.02 80);
+}
 
 @layer base {
   * {
@@ -165,10 +210,10 @@
     border-radius: 1.5rem;
   }
   .yellow-shadow {
-    text-shadow: 0 0 40px rgba(254, 208, 27, 0.5);
+    text-shadow: 0 0 40px color-mix(in oklch, var(--secondary) 50%, transparent);
   }
   .yellow-glow {
-    box-shadow: 0 0 20px rgba(254, 208, 27, 0.3);
+    box-shadow: 0 0 20px color-mix(in oklch, var(--secondary) 30%, transparent);
   }
 }
 

@@ -1,13 +1,38 @@
 import { Link } from "@tanstack/react-router";
-import { Search, Sun, Moon, Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, Sun, Moon, Menu, X, Palette } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+
+const THEMES = [
+  { id: 'default',   name: 'Midnight',   accent: '#fed01b', bg: '#040118', card: '#0f0a2e' },
+  { id: 'ocean',     name: 'Ocean',      accent: '#38bdf8', bg: '#020617', card: '#0c1a2e' },
+  { id: 'forest',    name: 'Forest',     accent: '#4ade80', bg: '#021207', card: '#0a1f10' },
+  { id: 'rose',      name: 'Rose',       accent: '#fb7185', bg: '#1a0010', card: '#2d0020' },
+  { id: 'violet',    name: 'Violet',     accent: '#a78bfa', bg: '#0d0520', card: '#1a0a35' },
+  { id: 'sunset',    name: 'Sunset',     accent: '#fb923c', bg: '#1a0800', card: '#2d1200' },
+  { id: 'cyan',      name: 'Cyber',      accent: '#22d3ee', bg: '#010d14', card: '#021820' },
+  { id: 'pink',      name: 'Sakura',     accent: '#f472b6', bg: '#1a0015', card: '#2d0025' },
+  { id: 'lime',      name: 'Neon',       accent: '#a3e635', bg: '#0a1000', card: '#141f00' },
+  { id: 'gold',      name: 'Royal',      accent: '#fbbf24', bg: '#0f0800', card: '#1f1200' },
+]
 
 export function Navbar() {
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeTheme, setActiveTheme] = useState('default');
+  const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
+  const themePanelRef = useRef<HTMLDivElement>(null);
+
+  const applyTheme = (themeId: string) => {
+    document.documentElement.setAttribute('data-theme', themeId === 'default' ? '' : themeId);
+    localStorage.setItem('studyhive-theme', themeId);
+    setActiveTheme(themeId);
+  };
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('studyhive-theme');
+    if (savedTheme) applyTheme(savedTheme);
+
     const saved = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (saved === 'dark' || (!saved && prefersDark)) {
@@ -17,7 +42,18 @@ export function Navbar() {
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (themePanelRef.current && !themePanelRef.current.contains(event.target as Node)) {
+        setIsThemePanelOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const toggleDark = () => {
@@ -61,6 +97,36 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="relative" ref={themePanelRef}>
+            <button 
+              onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
+              className={`p-2 rounded-full transition-all duration-500 hover:scale-110 ${!isScrolled ? 'text-white hover:bg-white/10' : 'text-primary hover:bg-muted'}`}
+              aria-label="Change theme"
+            >
+              <Palette className="w-5 h-5" />
+            </button>
+            
+            {isThemePanelOpen && (
+              <div className="absolute right-0 mt-2 p-3 glass-card border border-white/10 shadow-2xl min-w-[200px] z-50 animate-in fade-in zoom-in duration-200">
+                <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-bold mb-3 ml-1">Theme</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {THEMES.map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => {
+                        applyTheme(theme.id);
+                        setIsThemePanelOpen(false);
+                      }}
+                      className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer hover:scale-110 ${activeTheme === theme.id ? 'border-white scale-110 shadow-lg' : 'border-transparent'}`}
+                      style={{ backgroundColor: theme.accent }}
+                      title={theme.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={toggleDark}
             className={`p-2 rounded-full transition-all duration-500 hover:rotate-180 ${!isScrolled ? 'text-white hover:bg-white/10' : 'text-primary hover:bg-muted'}`}

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/Navbar";
-import { ChevronRight, FileText, Download, Eye, AlertCircle, Share2, Copy, X, ExternalLink, CloudUpload, FileImage, File } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getFiles, getFolder } from "@/lib/google-drive/drive.functions";
+import { ChevronRight, FileText, Download, Eye, AlertCircle, Share2, Copy, X, ExternalLink, CloudUpload, FileImage, File, Trash2, Key, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFiles, getFolder, verifyAdminPassword, deleteFile } from "@/lib/google-drive/drive.functions";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +14,31 @@ function NotesViewPage() {
   const { subjectId, topicId } = Route.useParams();
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "nameAZ" | "nameZA" | "largest" | "smallest">("newest");
+  const [fileToDelete, setFileToDelete] = useState<any>(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({ fileId, password }: any) => {
+      await verifyAdminPassword({ data: { password } });
+      return deleteFile({ data: { fileId } });
+    },
+    onSuccess: () => {
+      toast.success("File deleted successfully");
+      setFileToDelete(null);
+      setAdminPassword("");
+      queryClient.invalidateQueries({ queryKey: ['files', topicId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete file");
+    }
+  });
+
+  const handleDelete = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminPassword) return;
+    deleteMutation.mutate({ fileId: fileToDelete.id, password: adminPassword });
+  };
   
   const { data: files, isLoading, error } = useQuery({
     queryKey: ['files', topicId],
@@ -164,8 +189,17 @@ function NotesViewPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end relative">
+                  <button 
+                    onClick={() => setFileToDelete(file)}
+                    className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 mr-1"
+                    title="Delete File"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  
                   <span className="text-xs font-bold bg-muted px-3 py-1.5 rounded-full uppercase tracking-widest text-muted-foreground mr-2">
+
                     {file.size}
                   </span>
                   
@@ -251,6 +285,62 @@ function NotesViewPage() {
                 title="File Preview"
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Delete Modal */}
+      {fileToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#040118]/85 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl p-8 md:p-10 animate-scale-in rounded-[28px]">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-destructive/20 rounded-2xl flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-destructive" />
+                </div>
+                <h2 className="text-2xl font-bold text-primary">Delete File?</h2>
+              </div>
+              <button onClick={() => setFileToDelete(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X className="w-8 h-8 text-white/50" />
+              </button>
+            </div>
+            
+            <p className="text-muted-foreground mb-8">
+              Are you sure you want to delete <span className="text-primary font-bold">"{fileToDelete.name}"</span>? This action cannot be undone.
+            </p>
+            
+            <form onSubmit={handleDelete} className="space-y-6">
+              <div>
+                <label className="block text-xs font-bold text-white/40 uppercase tracking-[0.2em] mb-3 ml-1">Admin Password</label>
+                <div className="relative">
+                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                  <input 
+                    autoFocus
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full h-14 pl-12 pr-6 bg-white/[0.04] border border-white/10 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-2xl outline-none transition-all text-white placeholder-white/20"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  disabled={deleteMutation.isPending}
+                  className="w-full h-14 bg-destructive text-white font-bold rounded-2xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {deleteMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Delete"}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFileToDelete(null)}
+                  className="w-full h-14 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
