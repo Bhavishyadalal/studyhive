@@ -1,12 +1,8 @@
 import { google } from "googleapis";
 
-// ✅ FIX #2: Remove module-level cachedClient.
-// Cached OAuth2 client reuses an expired access token after 1hr on warm
-// Vercel instances. googleapis swallows the 401 internally on uploads
-// instead of throwing — causing the same silent hang.
-// getDriveClient() is cheap (no network call until first API hit), so
-// recreating per-invocation is the correct move here.
-
+// No module-level cache — cached OAuth2 client reuses expired access
+// tokens on warm Vercel instances (tokens expire after 1hr), causing
+// silent 401s on upload that never throw and leave the spinner frozen.
 export async function getDriveClient() {
   const clientId = process.env["GOOGLE_OAUTH_CLIENT_ID"];
   const clientSecret = process.env["GOOGLE_OAUTH_CLIENT_SECRET"];
@@ -21,9 +17,7 @@ export async function getDriveClient() {
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  // Force a fresh access token on every invocation.
-  // This call hits Google's token endpoint (~100ms) but guarantees
-  // the token is valid for the upload that follows.
+  // Force fresh access token before every Drive operation.
   await oauth2Client.getAccessToken();
 
   return google.drive({ version: "v3", auth: oauth2Client as any });
