@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Navbar } from "@/components/layout/Navbar";
 import { SubjectCard } from "@/components/home/SubjectCard";
-import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight, CloudUpload } from "lucide-react";
+import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight, CloudUpload, FileText, ExternalLink } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFolders, getRecentFiles, createFolder, getTotalFileCount } from "@/lib/google-drive/drive.functions";
 import { getStudyEmoji } from "@/components/home/SubjectCard";
@@ -53,6 +53,7 @@ function Index() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState("");
+  const [previewFile, setPreviewFile] = useState<any>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -200,7 +201,8 @@ function Index() {
             {recentFiles && recentFiles.length > 0 ? recentFiles.map((file: any, index: number) => (
               <div 
                 key={file.id} 
-                className="min-w-[260px] max-w-[260px] bg-white/[0.04] border border-white/[0.07] hover:border-[#fed01b]/30 rounded-2xl p-5 flex flex-col gap-3 card-hover glow-border cursor-default"
+                onClick={() => setPreviewFile(file)}
+                className="min-w-[260px] max-w-[260px] bg-white/[0.04] border border-white/[0.07] hover:border-[#fed01b]/30 rounded-2xl p-5 flex flex-col gap-3 card-hover glow-border cursor-pointer"
                 style={{ animationDelay: `${(index + 3) * 0.1}s` }}
               >
                 <div>
@@ -300,6 +302,40 @@ function Index() {
                 {createSubjectMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Subject"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 md:p-8 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setPreviewFile(null)} />
+          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-none sm:rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-4 min-w-0">
+                <FileText className="w-6 h-6 text-primary shrink-0" />
+                <h3 className="font-bold truncate text-primary">{previewFile.name}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={`https://drive.google.com/file/d/${previewFile.id}/view?usp=sharing`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" /> Open in Drive
+                </a>
+                <button onClick={() => setPreviewFile(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 bg-muted/30">
+              <iframe
+                src={`https://drive.google.com/file/d/${previewFile.id}/preview`}
+                className="w-full h-full border-none"
+                title="File Preview"
+              />
+            </div>
           </div>
         </div>
       )}
