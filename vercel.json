@@ -3,8 +3,5 @@
     "src/**/*.ts": {
       "maxDuration": 60
     }
-  },
-  "bodyParser": {
-    "sizeLimit": "50mb"
   }
 }
