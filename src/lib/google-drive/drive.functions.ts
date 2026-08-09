@@ -5,23 +5,20 @@ import { getDriveClient, getRootFolderId } from "./drive.server";
 export const getFolders = createServerFn({ method: "GET" })
   .inputValidator(z.object({ parentId: z.string().optional() }))
   .handler(async ({ data }) => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
+    const drive = await getDriveClient();
     let parentId = data.parentId;
-    
+
     if (!parentId) {
       parentId = await getRootFolderId(drive);
     }
-    
+
     const response = await (drive as any).files.list({
       q: `'${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
       fields: 'files(id, name, description)',
     });
-    
+
     const folders = response.data.files || [];
-    
+
     const foldersWithCounts = await Promise.all(folders.map(async (f: any) => {
       let isLocked = false;
       try {
@@ -30,7 +27,7 @@ export const getFolders = createServerFn({ method: "GET" })
           isLocked = !!desc.protected;
         }
       } catch (e) {}
-      
+
       const fileCountResponse = await (drive as any).files.list({
         q: `'${f.id}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
         fields: 'files(id)',
@@ -44,7 +41,7 @@ export const getFolders = createServerFn({ method: "GET" })
         fileCount: fileCountResponse.data.files?.length || 0
       };
     }));
-    
+
     return foldersWithCounts;
   });
 
@@ -61,19 +58,16 @@ export const verifyAdminPassword = createServerFn({ method: "POST" })
 export const getRecentFiles = createServerFn({ method: "GET" })
   .inputValidator(z.object({}))
   .handler(async () => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
+    const drive = await getDriveClient();
     const response = await (drive as any).files.list({
       q: `mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
       fields: 'files(id, name, createdTime, description, parents)',
       orderBy: 'modifiedTime desc',
       pageSize: 6,
     });
-    
+
     const files = response.data.files || [];
-    
+
     const filesWithParentName = await Promise.all(files.map(async (f: any) => {
       let subjectName = "General";
       if (f.parents && f.parents.length > 0) {
@@ -85,7 +79,7 @@ export const getRecentFiles = createServerFn({ method: "GET" })
           subjectName = parentResponse.data.name;
         } catch (e) {}
       }
-      
+
       return {
         id: f.id!,
         name: f.name!,
@@ -94,18 +88,14 @@ export const getRecentFiles = createServerFn({ method: "GET" })
         subjectName,
       };
     }));
-    
+
     return filesWithParentName;
   });
-
 
 export const deleteFile = createServerFn({ method: "POST" })
   .inputValidator(z.object({ fileId: z.string() }))
   .handler(async ({ data }) => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
+    const drive = await getDriveClient();
     await (drive as any).files.update({
       fileId: data.fileId,
       requestBody: { trashed: true }
@@ -113,19 +103,15 @@ export const deleteFile = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-
 export const getFiles = createServerFn({ method: "GET" })
   .inputValidator(z.object({ folderId: z.string() }))
   .handler(async ({ data }) => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
+    const drive = await getDriveClient();
     const response = await (drive as any).files.list({
       q: `'${data.folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
       fields: 'files(id, name, size, createdTime, description, webViewLink)',
     });
-    
+
     return response.data.files?.map((f: any) => ({
       id: f.id!,
       name: f.name!,
@@ -144,29 +130,26 @@ export const createFolder = createServerFn({ method: "POST" })
     password: z.string().optional()
   }))
   .handler(async ({ data }) => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
+    const drive = await getDriveClient();
     let parentId = data.parentId;
     if (!parentId) {
       parentId = await getRootFolderId(drive);
     }
-    
+
     const description = data.isPrivate ? JSON.stringify({ protected: true, password: data.password }) : "";
-    
+
     const fileMetadata = {
       name: data.name,
       mimeType: 'application/vnd.google-apps.folder',
       parents: [parentId],
       description
     };
-    
+
     const folder = await (drive as any).files.create({
       requestBody: fileMetadata,
       fields: 'id',
     });
-    
+
     await (drive as any).permissions.create({
       fileId: folder.data.id!,
       requestBody: {
@@ -174,7 +157,7 @@ export const createFolder = createServerFn({ method: "POST" })
         type: 'anyone',
       },
     });
-    
+
     return { id: folder.data.id };
   });
 
@@ -187,30 +170,27 @@ export const uploadFile = createServerFn({ method: "POST" })
     uploaderName: z.string().optional()
   }))
   .handler(async ({ data }) => {
-    const credentials = process.env['GOOGLE_SERVICE_ACCOUNT_JSON'];
-    if (!credentials) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON not set");
-    
-    const drive = await getDriveClient(credentials);
-    
+    const drive = await getDriveClient();
+
     const buffer = Buffer.from(data.fileBase64, 'base64');
-    
+
     const fileMetadata = {
       name: data.fileName,
       parents: [data.folderId],
       description: data.uploaderName || 'Anonymous'
     };
-    
+
     const media = {
       mimeType: data.mimeType,
       body: buffer,
     };
-    
+
     const response = await (drive as any).files.create({
       requestBody: fileMetadata,
       media: media,
       fields: 'id',
     });
-    
+
     await (drive as any).permissions.create({
       fileId: response.data.id!,
       requestBody: {
@@ -218,6 +198,6 @@ export const uploadFile = createServerFn({ method: "POST" })
         type: 'anyone',
       },
     });
-    
+
     return { id: response.data.id };
   });
