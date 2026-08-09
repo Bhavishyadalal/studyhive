@@ -144,10 +144,11 @@ function NotesViewPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedFiles.map((file: any) => (
+            {sortedFiles.map((file: any, index: number) => (
               <div 
                 key={file.id} 
-                className="group bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:shadow-xl hover:-translate-y-1 hover:border-secondary/50"
+                className="group bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:shadow-xl hover:-translate-y-1 hover:border-secondary/50 animate-fade-up"
+                style={{ animationDelay: `${(index + 1) * 0.1}s` }}
               >
                 <div className="flex items-center gap-5 w-full md:w-auto">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
@@ -170,7 +171,7 @@ function NotesViewPage() {
                   
                   <button 
                     onClick={() => copyToClipboard(file.id)}
-                    className="p-3 text-muted-foreground hover:text-primary hover:bg-muted rounded-xl transition-all"
+                    className="p-3 text-muted-foreground hover:text-primary hover:bg-muted rounded-xl transition-all hover:scale-110 active:scale-90"
                     title="Copy Share Link"
                   >
                     <Copy className="w-5 h-5" />
@@ -178,7 +179,7 @@ function NotesViewPage() {
 
                   <button 
                     onClick={() => setPreviewFile(file)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-secondary text-primary font-bold hover:bg-secondary transition-all"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-secondary text-primary font-bold hover:bg-secondary transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     <Eye className="w-5 h-5" />
                     Preview
@@ -186,7 +187,7 @@ function NotesViewPage() {
 
                   <a 
                     href={`https://drive.google.com/uc?export=download&id=${file.id}`}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#070235] text-white font-bold hover:opacity-90 transition-all shadow-md"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#070235] text-white font-bold hover:opacity-90 transition-all shadow-md hover:scale-105 active:scale-95 hover:shadow-yellow-400/20 duration-200"
                   >
                     <Download className="w-5 h-5" />
                     Download
@@ -218,8 +219,8 @@ function NotesViewPage() {
       {/* Preview Modal */}
       {previewFile && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPreviewFile(null)} />
-          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setPreviewFile(null)} />
+          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-4 min-w-0">
                 <FileText className="w-6 h-6 text-primary shrink-0" />

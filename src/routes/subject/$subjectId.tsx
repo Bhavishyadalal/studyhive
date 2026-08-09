@@ -39,13 +39,13 @@ function SubjectPage() {
       {/* Subject Header Banner */}
       <div className="bg-[#070235] text-white py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-8">
+          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-8 animate-fade-up">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-white font-medium capitalize">{subjectDetails?.name || subjectId.split('-').join(' ')}</span>
           </nav>
           
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 animate-fade-up stagger-1">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center">
                 <Folder className="w-10 h-10 text-secondary" />
@@ -59,7 +59,7 @@ function SubjectPage() {
             <Link 
               to="/upload"
               search={{ subject: subjectId }}
-              className="bg-secondary text-primary font-bold px-8 py-4 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center gap-2"
+              className="bg-secondary text-primary font-bold px-8 py-4 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl hover:shadow-yellow-400/30 flex items-center gap-2"
             >
               <CloudUpload className="w-6 h-6" />
               Upload Here
@@ -78,7 +78,7 @@ function SubjectPage() {
               placeholder="Filter topics..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 bg-card border-2 border-border rounded-xl focus:ring-2 focus:ring-secondary outline-none transition-all"
+              className="w-full h-12 pl-12 pr-4 bg-card border-2 border-border rounded-xl focus:ring-2 focus:ring-secondary focus:scale-[1.01] outline-none transition-all duration-200"
             />
           </div>
         </div>
@@ -97,8 +97,8 @@ function SubjectPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {filteredTopics?.map((topic: any) => (
-              <div key={topic.id} className="relative h-32">
+            {filteredTopics?.map((topic: any, index: number) => (
+              <div key={topic.id} className="relative h-32 animate-fade-up" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
                 {topic.isLocked ? (
                   <div className="h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between opacity-70 cursor-not-allowed">
                     <div className="flex items-center gap-4">
@@ -108,21 +108,21 @@ function SubjectPage() {
                       <div>
                         <span className="block font-bold text-xl text-primary/60 leading-tight">{topic.name}</span>
                         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                          <Lock className="w-3 h-3" />
+                          <Lock className="w-3 h-3 animate-pulse" />
                           <span>Private / Locked</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-1">Contact admin to access</p>
                       </div>
                     </div>
                     <div className="bg-muted p-2 rounded-lg text-muted-foreground">
-                      <Lock className="w-5 h-5" />
+                      <Lock className="w-5 h-5 animate-pulse" />
                     </div>
                   </div>
                 ) : (
                   <Link
                     to="/subject/$subjectId/$topicId"
                     params={{ subjectId, topicId: topic.id }}
-                    className="group h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary"
+                    className="group h-full bg-card rounded-2xl shadow-sm border-2 border-border p-6 flex items-center justify-between transition-all hover:shadow-2xl hover:-translate-y-2 hover:border-secondary hover:shadow-yellow-500/10"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
@@ -139,7 +139,7 @@ function SubjectPage() {
                     </div>
 
                     <div className="bg-muted p-2 rounded-lg group-hover:bg-secondary group-hover:text-primary transition-all">
-                      <ArrowRight className="w-5 h-5" />
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </div>
                   </Link>
                 )}
@@ -174,7 +174,7 @@ function SubjectPage() {
       <Link 
         to="/upload"
         search={{ subject: subjectId }}
-        className="fixed bottom-8 right-8 md:hidden w-16 h-16 bg-secondary text-primary rounded-full shadow-2xl flex items-center justify-center z-50 animate-bounce active:scale-95 transition-all"
+        className="fixed bottom-8 right-8 md:hidden w-16 h-16 bg-secondary text-primary rounded-full shadow-2xl flex items-center justify-center z-50 animate-float active:scale-95 transition-all"
       >
         <CloudUpload className="w-8 h-8" />
       </Link>

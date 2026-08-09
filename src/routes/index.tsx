@@ -4,7 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { SubjectCard } from "@/components/home/SubjectCard";
 import { Search, Loader2, Plus, X, Clock, BookOpen, ChevronRight } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFolders, getRecentFiles, createFolder } from "@/lib/google-drive/drive.functions";
+import { getFolders, getRecentFiles, createFolder, getTotalFileCount } from "@/lib/google-drive/drive.functions";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
 
@@ -70,6 +70,11 @@ function Index() {
     queryFn: () => getRecentFiles({ data: {} }),
   });
 
+  const { data: notesShared, isLoading: isNotesCountLoading } = useQuery({
+    queryKey: ['totalFileCount'],
+    queryFn: () => getTotalFileCount({ data: {} }),
+  });
+
   const createSubjectMutation = useMutation({
     mutationFn: (name: string) => createFolder({ data: { name } }),
     onSuccess: () => {
@@ -97,7 +102,6 @@ function Index() {
   };
 
   const totalSubjects = subjects?.length ?? 0;
-  const totalFiles = subjects?.reduce((acc: number, s: any) => acc + (s.fileCount || 0), 0) ?? 0;
 
   const filteredSubjects = useMemo(() => {
     if (!subjects) return [];
@@ -118,10 +122,12 @@ function Index() {
         </div>
         
         <main className="relative z-10 max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
-            Share notes. <span className="text-[#fed01b] yellow-shadow">Learn together</span>.
-          </h1>
-          <div className="relative max-w-2xl mx-auto mb-16">
+          <div className="animate-fade-up">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
+              Share notes. <span className="text-[#fed01b] yellow-shadow">Learn together</span>.
+            </h1>
+          </div>
+          <div className="relative max-w-2xl mx-auto mb-16 animate-fade-up stagger-1">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-yellow-500/70 w-6 h-6" />
             <input 
               type="text" 
@@ -129,22 +135,22 @@ function Index() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleHeroSearch}
               placeholder="Search for subjects..." 
-              className="w-full h-[68px] pl-16 pr-6 bg-white/[0.06] border border-white/10 rounded-full shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-400/30 transition-all text-lg text-white placeholder-white/30"
+              className="w-full h-[68px] pl-16 pr-6 bg-white/[0.06] border border-white/10 rounded-full shadow-xl focus:outline-none focus:ring-4 focus:ring-yellow-400/40 focus:scale-[1.01] transition-all duration-300 text-lg text-white placeholder-white/30"
             />
           </div>
           
-          <div className="flex justify-center items-center gap-12 text-sm">
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1">
+          <div className="flex justify-center items-center gap-12 text-sm animate-fade-up stagger-2">
+            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
               <span className="text-3xl font-bold">
-                {isLoading ? (
+                {isNotesCountLoading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
-                  totalFiles
+                  notesShared || 0
                 )}
               </span>
               <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Notes Shared</span>
             </div>
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1">
+            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
               <span className="text-3xl font-bold">
                 {isLoading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -154,7 +160,7 @@ function Index() {
               </span>
               <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Subjects</span>
             </div>
-            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1">
+            <div className="glass px-8 py-4 rounded-full flex flex-col items-center gap-1 hover:scale-105 hover:animate-glow-pulse transition-all duration-300 cursor-default">
               <span className="text-3xl font-bold">Free</span>
               <span className="text-white/60 uppercase text-[10px] tracking-widest font-bold">Always</span>
             </div>
@@ -165,10 +171,10 @@ function Index() {
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Recently Uploaded */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold text-primary mb-6 border-l-4 border-yellow-400 pl-4">Recently Uploaded</h2>
+          <h2 className="text-2xl font-bold text-primary mb-6 border-l-4 border-yellow-400 pl-4 animate-fade-up">Recently Uploaded</h2>
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {recentFiles?.map((file: any) => (
-              <div key={file.id} className="min-w-[280px] glass-card p-6 border border-white/5 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group shimmer">
+            {recentFiles?.map((file: any, index: number) => (
+              <div key={file.id} className={`min-w-[280px] glass-card p-6 border border-white/5 shadow-xl hover:shadow-2xl hover:scale-[1.03] hover:-translate-y-1 transition-all duration-300 group shimmer animate-fade-up`} style={{ animationDelay: `${(index + 3) * 0.1}s` }}>
                 <div>
                   <p className="font-bold text-lg truncate text-primary">{file.name}</p>
                   <div className="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[10px] font-bold mt-2 tracking-widest uppercase">
@@ -193,27 +199,30 @@ function Index() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredSubjects.map((subject: any) => (
-                <SubjectCard 
-                  key={subject.id} 
-                  name={subject.name}
-                  icon="📚"
-                  fileCount={subject.fileCount}
-                  isLocked={subject.isLocked}
-                  href={`/subject/${subject.id}`}
-                />
+              {filteredSubjects.map((subject: any, index: number) => (
+                <div key={subject.id} className="animate-fade-up" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
+                  <SubjectCard 
+                    name={subject.name}
+                    icon="📚"
+                    fileCount={subject.fileCount}
+                    isLocked={subject.isLocked}
+                    href={`/subject/${subject.id}`}
+                  />
+                </div>
               ))}
 
               {/* Add Subject Card */}
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="h-40 bg-card/50 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-secondary hover:bg-card transition-all group"
-              >
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                  <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
-                </div>
-                <span className="font-bold text-muted-foreground group-hover:text-primary">Add Subject</span>
-              </button>
+              <div className="animate-fade-up" style={{ animationDelay: `${(filteredSubjects.length + 1) * 0.1}s` }}>
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full h-40 bg-card/50 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-secondary hover:bg-card transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-secondary/20 group-hover:rotate-90 transition-all duration-300">
+                    <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
+                  </div>
+                  <span className="font-bold text-muted-foreground group-hover:text-primary">Add Subject</span>
+                </button>
+              </div>
             </div>
           )}
         </section>
@@ -221,8 +230,8 @@ function Index() {
 
       {/* Create Subject Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040118]/85 backdrop-blur-xl">
-          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl p-8 md:p-10 animate-in fade-in zoom-in duration-300 rounded-[28px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#040118]/85 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl p-8 md:p-10 animate-scale-in rounded-[28px]">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold text-primary">New Subject</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
@@ -245,7 +254,7 @@ function Index() {
               
               <button 
                 disabled={createSubjectMutation.isPending}
-                className="w-full h-16 bg-[#fed01b] text-[#040118] text-lg font-bold rounded-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 yellow-glow"
+                className="w-full h-16 bg-[#fed01b] text-[#040118] text-lg font-bold rounded-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 yellow-glow animate-glow-pulse"
               >
                 {createSubjectMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Subject"}
               </button>

@@ -47,7 +47,7 @@ export function SubjectCard({ name, fileCount, isLocked, href }: SubjectCardProp
   return (
     <Link
       to={href}
-      className={`group relative flex flex-col justify-between h-48 p-7 glass-card transition-all duration-300 hover:-translate-y-2 border-white/10 ${color.border} ${color.glow} hover:shadow-2xl overflow-hidden`}
+      className={`group relative flex flex-col justify-between h-48 p-7 glass-card transition-all duration-300 hover:-translate-y-2 border-white/10 ${color.border} ${color.glow} hover:shadow-2xl hover:shadow-yellow-500/10 overflow-hidden`}
     >
       <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${color.accent} opacity-70 group-hover:opacity-100 transition-opacity`} />
       

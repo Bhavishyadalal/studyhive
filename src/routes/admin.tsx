@@ -72,8 +72,8 @@ function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#070235] flex items-center justify-center p-4 text-white">
-        <div className="w-full max-w-md space-y-8 text-center">
-          <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
+        <div className="w-full max-w-md space-y-8 text-center animate-scale-in">
+          <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
             <Shield className="w-10 h-10 text-secondary" />
           </div>
           <h1 className="text-4xl font-bold">Admin Portal</h1>
@@ -119,7 +119,7 @@ function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm">
+          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm animate-fade-up">
             <div className="w-14 h-14 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center">
               <BookOpen className="w-7 h-7" />
             </div>
@@ -128,7 +128,7 @@ function AdminPage() {
               <h3 className="text-3xl font-bold">{subjects?.length || 0}</h3>
             </div>
           </div>
-          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm">
+          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm animate-fade-up stagger-1">
             <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center">
               <FileText className="w-7 h-7" />
             </div>
@@ -137,7 +137,7 @@ function AdminPage() {
               <h3 className="text-3xl font-bold">{recentFiles?.length || 0}</h3>
             </div>
           </div>
-          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm">
+          <div className="bg-card p-8 rounded-3xl border-2 border-border flex items-center gap-6 shadow-sm animate-fade-up stagger-2">
             <div className="w-14 h-14 bg-secondary/10 text-primary rounded-2xl flex items-center justify-center">
               <Users className="w-7 h-7" />
             </div>
@@ -167,7 +167,7 @@ function AdminPage() {
 
         {/* Files Tab */}
         {activeTab === "files" && (
-          <div className="bg-card rounded-3xl border-2 border-border shadow-xl overflow-hidden">
+          <div key="files" className="bg-card rounded-3xl border-2 border-border shadow-xl overflow-hidden animate-fade-up transition-all duration-200">
             <div className="p-8 border-b bg-muted/30">
               <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
                 <Clock className="w-6 h-6" />
@@ -199,7 +199,7 @@ function AdminPage() {
                               deleteMutation.mutate(file.id);
                             }
                           }}
-                          className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                          className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all hover:scale-110 active:scale-90 duration-150"
                           title="Delete File"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -218,7 +218,7 @@ function AdminPage() {
 
         {/* Subjects Tab */}
         {activeTab === "subjects" && (
-          <div className="space-y-6">
+          <div key="subjects" className="space-y-6 animate-fade-up transition-all duration-200">
             <div className="bg-card p-8 rounded-3xl border-2 border-border">
               <h2 className="text-2xl font-bold text-primary mb-2">All Subjects</h2>
               <p className="text-muted-foreground text-sm">Deleting a subject moves it to Google Drive trash. It can be restored from there.</p>
@@ -238,7 +238,7 @@ function AdminPage() {
                         deleteFolderMutation.mutate(subject.id);
                       }
                     }}
-                    className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                    className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all hover:scale-110 active:scale-90 duration-150"
                     title="Delete Subject"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -254,7 +254,7 @@ function AdminPage() {
 
         {/* Topics Tab */}
         {activeTab === "topics" && (
-          <div className="space-y-6">
+          <div key="topics" className="space-y-6 animate-fade-up transition-all duration-200">
             <div className="bg-card p-8 rounded-3xl border-2 border-border space-y-4">
               <label className="block text-sm font-bold text-primary uppercase tracking-widest">Select a Subject</label>
               <select 
@@ -290,7 +290,7 @@ function AdminPage() {
                             deleteFolderMutation.mutate(topic.id);
                           }
                         }}
-                        className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                        className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all hover:scale-110 active:scale-90 duration-150"
                         title="Delete Topic"
                       >
                         <Trash2 className="w-5 h-5" />

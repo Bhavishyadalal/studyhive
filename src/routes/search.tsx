@@ -65,7 +65,7 @@ function SearchPage() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Search by file name..."
-              className="w-full h-[68px] pl-16 pr-6 bg-card text-foreground placeholder:text-muted-foreground border border-border rounded-full text-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/30 transition-all"
+              className="w-full h-[68px] pl-16 pr-6 bg-card text-foreground placeholder:text-muted-foreground border border-border rounded-full text-lg focus:outline-none focus:ring-4 focus:ring-yellow-400/30 focus:scale-[1.01] transition-all duration-300"
             />
             {inputValue && (
               <button 
@@ -80,7 +80,7 @@ function SearchPage() {
 
         <div className="space-y-6">
           {!debouncedQuery || debouncedQuery.trim().length < 2 ? (
-            <div className="text-center py-24 text-muted-foreground">
+            <div className="text-center py-24 text-muted-foreground animate-fade-up">
               <Search className="w-16 h-16 mx-auto mb-4 opacity-20" />
               <p>Type at least 2 characters to search</p>
             </div>
@@ -94,8 +94,8 @@ function SearchPage() {
               <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4">
                 {results.length} result{results.length !== 1 ? "s" : ""} for "{debouncedQuery}"
               </div>
-              {results.map((file: any) => (
-                <div key={file.id} className="bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all">
+              {results.map((file: any, index: number) => (
+                <div key={file.id} className="bg-card rounded-2xl shadow-sm border-2 border-border p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-secondary/50 duration-200 animate-fade-up" style={{ animationDelay: `${index * 0.07}s` }}>
                   <div className="flex items-center gap-5 w-full md:w-auto">
                     <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
                       {getFileIcon(file.name)}
@@ -109,18 +109,18 @@ function SearchPage() {
                   <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                     <button 
                       onClick={() => copyLink(file.id)}
-                      className="p-3 text-muted-foreground hover:text-primary hover:bg-muted rounded-xl transition-all"
+                      className="p-3 text-muted-foreground hover:text-primary hover:bg-muted rounded-xl transition-all hover:scale-110 active:scale-90 duration-150"
                       title="Copy link"
                     >
                       <Copy className="w-5 h-5" />
                     </button>
                     <button 
                       onClick={() => setPreviewFile(file)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-secondary text-primary font-bold hover:bg-secondary transition-all"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-secondary text-primary font-bold hover:bg-secondary transition-all hover:scale-110 active:scale-90 duration-150"
                     >
                       <Eye className="w-5 h-5" /> Preview
                     </button>
-                    <a href={`https://drive.google.com/uc?export=download&id=${file.id}`} className="px-4 py-2.5 rounded-xl bg-[#070235] text-white font-bold hover:opacity-90 transition-all shadow-md">
+                    <a href={`https://drive.google.com/uc?export=download&id=${file.id}`} className="px-4 py-2.5 rounded-xl bg-[#070235] text-white font-bold hover:opacity-90 transition-all shadow-md hover:scale-110 active:scale-90 duration-150">
                       <Download className="w-5 h-5" />
                     </a>
                   </div>
@@ -129,7 +129,7 @@ function SearchPage() {
             </>
           ) : (
             <div className="text-center py-24 text-muted-foreground">
-              <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-20 animate-fade-up" />
               <p>No results found</p>
               <p className="text-sm">No files match "{debouncedQuery}". Try a different search term.</p>
             </div>
@@ -138,9 +138,9 @@ function SearchPage() {
       </div>
 
       {previewFile && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPreviewFile(null)} />
-          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setPreviewFile(null)} />
+          <div className="relative z-10 w-full max-w-6xl h-full flex flex-col bg-card rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-4 min-w-0">
                 <FileText className="w-6 h-6 text-primary shrink-0" />

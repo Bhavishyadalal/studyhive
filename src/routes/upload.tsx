@@ -94,8 +94,8 @@ function UploadPage() {
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-12">
         {success ? (
-          <div className="text-center py-20 bg-card rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/30 shadow-xl animate-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
+          <div className="text-center py-20 bg-card rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/30 shadow-xl animate-scale-in">
+            <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-glow-pulse">
               <Check className="w-12 h-12" />
             </div>
             <h2 className="text-4xl font-bold text-primary mb-4">Your notes are live! 🎉</h2>
@@ -120,14 +120,14 @@ function UploadPage() {
             {/* Visual Stepper */}
             <div className="relative flex justify-between max-w-2xl mx-auto px-4">
               <div className="absolute top-6 left-0 right-0 h-1 bg-muted -z-0 mx-12">
-                <div className="h-full bg-secondary transition-all duration-500" style={{ width: `${(step - 1) * 50}%` }} />
+                <div className="h-full bg-secondary transition-all duration-500 ease-in-out" style={{ width: `${(step - 1) * 50}%` }} />
               </div>
               {[1, 2, 3].map((s) => (
                 <div key={s} className="relative z-10 flex flex-col items-center gap-2">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-all duration-300 ${step >= s ? "bg-secondary border-secondary text-primary scale-110 shadow-lg" : "bg-card border-muted text-muted-foreground"}`}>
                     {s}
                   </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${step >= s ? "text-primary" : "text-muted-foreground"}`}>
+                  <span className={`text-xs font-bold uppercase tracking-wider transition-colors duration-300 ${step >= s ? "text-primary" : "text-muted-foreground"}`}>
                     {s === 1 ? "Subject" : s === 2 ? "Topic" : "File"}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ function UploadPage() {
 
             <div className="bg-card rounded-3xl shadow-2xl border-2 border-border p-8 md:p-12 min-h-[400px]">
               {step === 1 && (
-                <div className="space-y-8 animate-in slide-in-from-right duration-300">
+                <div className="space-y-8 animate-slide-right">
                   <div className="text-center">
                     <h2 className="text-3xl font-bold text-primary mb-2">Select a Subject</h2>
                     <p className="text-muted-foreground">Which area of study do these notes belong to?</p>
@@ -146,7 +146,7 @@ function UploadPage() {
                       <button
                         key={s.id}
                         onClick={() => { setSubjectId(s.id); setStep(2); }}
-                        className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all hover:border-secondary hover:bg-secondary/5 ${subjectId === s.id ? 'border-secondary bg-secondary/10 shadow-md' : 'border-border bg-muted/30'}`}
+                        className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all hover:scale-[1.04] hover:shadow-lg hover:shadow-yellow-400/10 hover:border-secondary hover:bg-secondary/5 ${subjectId === s.id ? 'border-secondary bg-secondary/10 shadow-md animate-glow-pulse' : 'border-border bg-muted/30'}`}
                       >
                         <BookOpen className={`w-8 h-8 ${subjectId === s.id ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className="font-bold text-sm text-center">{s.name}</span>
@@ -157,7 +157,7 @@ function UploadPage() {
               )}
 
               {step === 2 && (
-                <div className="space-y-8 animate-in slide-in-from-right duration-300">
+                <div className="space-y-8 animate-slide-right">
                   <div className="text-center">
                     <h2 className="text-3xl font-bold text-primary mb-2">Choose a Topic</h2>
                     <p className="text-muted-foreground">In {currentSubjectName}</p>
@@ -172,7 +172,7 @@ function UploadPage() {
                           <button
                             key={t.id}
                             onClick={() => { setTopicId(t.id); setIsCreatingNewTopic(false); setStep(3); }}
-                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all hover:border-secondary ${topicId === t.id && !isCreatingNewTopic ? 'border-secondary bg-secondary/10' : 'border-border'}`}
+                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all hover:scale-[1.04] hover:shadow-lg hover:shadow-yellow-400/10 hover:border-secondary active:scale-95 ${topicId === t.id && !isCreatingNewTopic ? 'border-secondary bg-secondary/10 animate-glow-pulse' : 'border-border'}`}
                           >
                             <span className="font-bold">{t.name}</span>
                             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -211,14 +211,14 @@ function UploadPage() {
               )}
 
               {step === 3 && (
-                <div className="space-y-8 animate-in slide-in-from-right duration-300">
+                <div className="space-y-8 animate-slide-right">
                   <div className="text-center">
                     <h2 className="text-3xl font-bold text-primary mb-2">Upload Files</h2>
                     <p className="text-muted-foreground">Drag and drop your notes here</p>
                   </div>
 
                   <div 
-                    className={`relative group border-4 border-dashed rounded-3xl p-12 text-center transition-all ${selectedFile ? 'border-emerald-500 bg-emerald-50/10' : 'border-primary/20 hover:border-secondary bg-muted/20'}`}
+                    className={`relative group border-4 border-dashed rounded-3xl p-12 text-center transition-all duration-200 ${selectedFile ? 'border-emerald-500 bg-emerald-50/10' : 'border-primary/20 hover:border-secondary hover:scale-[1.01] hover:shadow-inner bg-muted/20'}`}
                   >
                     <input 
                       type="file" 
@@ -238,7 +238,7 @@ function UploadPage() {
                     />
                     <div className="space-y-4">
                       {selectedFile ? (
-                        <div className="flex flex-col items-center animate-in zoom-in">
+                        <div className="flex flex-col items-center animate-scale-in">
                           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
                             <FileText className="w-8 h-8 text-emerald-600" />
                           </div>
@@ -281,7 +281,7 @@ function UploadPage() {
                     <button 
                       onClick={handleUpload}
                       disabled={!selectedFile || uploadMutation.isPending || !!fileSizeError}
-                      className="bg-primary text-primary-foreground font-bold px-12 py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
+                      className="bg-primary text-primary-foreground font-bold px-12 py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 hover:shadow-yellow-400/20 disabled:opacity-50 disabled:hover:scale-100 transition-all flex items-center gap-2"
                     >
                       {uploadMutation.isPending ? <><Loader2 className="animate-spin" /> Uploading...</> : "Upload to Drive"}
                     </button>
